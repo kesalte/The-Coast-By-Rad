@@ -467,9 +467,7 @@ const BANNER = { menu: 'tile-menu', beds: 'tile-beds', events: 'tile-events', fa
 document.querySelectorAll('.page').forEach(p => {
   const b = document.createElement('div');
   b.className = `banner ph${p.id === 'faq' ? ' faq-banner' : ''}`;
-  const overlay = p.id === 'faq'
-    ? 'linear-gradient(rgba(12,39,50,.48),rgba(12,39,50,.78))'
-    : 'linear-gradient(rgba(10,30,45,.25),rgba(10,30,45,.72))';
+  const overlay = 'linear-gradient(180deg,rgba(13,38,51,.18),rgba(13,38,51,.72))';
   b.style.backgroundImage = `${overlay},url(${src(BANNER[p.id])})`;
   const bk = document.createElement('a');
   bk.className = 'back'; bk.href = '#home'; bk.setAttribute('aria-label', 'Back to home'); bk.innerHTML = '&larr;';
