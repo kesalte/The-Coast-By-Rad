@@ -18,6 +18,17 @@ const views = [...document.querySelectorAll('.view')];
 const siteHeader = document.querySelector('.site-header');
 const primaryNav = document.getElementById('primaryNav');
 const menuToggle = document.getElementById('menuToggle');
+const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+let lastObservedHash = location.hash;
+const transitionOverlay = document.getElementById('oceanTransition');
+const transitionCanvas = document.getElementById('oceanTransitionCanvas');
+let oceanCompositor;
+let transitionToken = 0;
+let transitionFrame = 0;
+let pendingPageUpdate = null;
+const transitionDuration = 1600;
+const routeSwapAt = 800;
+
 function setMobileNavOpen(open) {
   primaryNav.classList.toggle('is-open', open);
   menuToggle.classList.toggle('is-open', open);
@@ -68,10 +79,17 @@ addEventListener('scroll', updateScrollButtons, { passive: true });
 addEventListener('resize', updateScrollButtons);
 updateScrollButtons();
 
+function activeViewId() {
+  const active = views.find(view => !view.hidden);
+  return active ? active.id : null;
+}
+
 function route() {
   const id = (location.hash || '#home').slice(1);
   const current = views.find(v => v.id === id) || views[0];
-  views.forEach(v => v.hidden = v !== current);
+  views.forEach(v => {
+    v.hidden = v !== current;
+  });
   document.body.classList.toggle('inner', current.id !== 'home');
   primaryNav.querySelectorAll('a[href^="#"]').forEach(link => {
     if (link.getAttribute('href') === `#${current.id}`) link.setAttribute('aria-current', 'page');
@@ -83,11 +101,324 @@ function route() {
   siteHeader.classList.toggle('is-scrolled', current.id !== 'home');
   lastHeaderScrollY = 0;
 }
-addEventListener('hashchange', route);
+
+function compileTransitionShader(gl, type, source) {
+  const shader = gl.createShader(type);
+  if (!shader) throw new Error('Could not allocate an ocean transition shader.');
+  gl.shaderSource(shader, source);
+  gl.compileShader(shader);
+  if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+    const message = gl.getShaderInfoLog(shader) || 'Unknown shader compilation error.';
+    gl.deleteShader(shader);
+    throw new Error(message);
+  }
+  return shader;
+}
+
+function createOceanCompositor() {
+  const gl = transitionCanvas.getContext('webgl', { alpha: true, premultipliedAlpha: false, antialias: false });
+  if (!gl) throw new Error('WebGL is not available in this browser.');
+
+  const vertexSource = `
+    attribute vec2 a_position;
+    varying vec2 v_uv;
+    void main() {
+      v_uv = (a_position + 1.0) * 0.5;
+      gl_Position = vec4(a_position, 0.0, 1.0);
+    }
+  `;
+  const fragmentSource = `
+    precision mediump float;
+    uniform vec2 u_resolution;
+    uniform float u_progress;
+    uniform float u_time;
+    varying vec2 v_uv;
+
+    float hash21(vec2 p) {
+      vec3 p3 = fract(vec3(p.xyx) * 0.1031);
+      p3 += dot(p3, p3.yzx + 33.33);
+      return fract((p3.x + p3.y) * p3.z);
+    }
+
+    float noise2(vec2 p) {
+      vec2 cell = floor(p);
+      vec2 f = fract(p);
+      f = f * f * (3.0 - 2.0 * f);
+      float a = hash21(cell);
+      float b = hash21(cell + vec2(1.0, 0.0));
+      float c = hash21(cell + vec2(0.0, 1.0));
+      float d = hash21(cell + vec2(1.0, 1.0));
+      return mix(mix(a, b, f.x), mix(c, d, f.x), f.y);
+    }
+
+    float fbm(vec2 p) {
+      float value = 0.0;
+      float amplitude = 0.5;
+      mat2 turn = mat2(1.62, -1.18, 1.18, 1.62);
+      for (int octave = 0; octave < 3; octave++) {
+        value += amplitude * noise2(p);
+        p = turn * p + vec2(13.7, 9.2);
+        amplitude *= 0.5;
+      }
+      return value;
+    }
+
+    float edgeRoughness(float y) {
+      return 0.026 * sin(y * 7.1 + 0.3)
+        + 0.016 * sin(y * 17.3 + 1.8)
+        + 0.008 * sin(y * 37.7 + 3.1)
+        + 0.006 * (noise2(vec2(y * 29.0, 4.7)) - 0.5);
+    }
+
+    void main() {
+      vec2 uv = gl_FragCoord.xy / u_resolution;
+      float time = u_time;
+
+      float leadingBase = -0.20 + 3.40 * u_progress;
+      float trailingBase = leadingBase - 1.62;
+      float leadingEdge = leadingBase + edgeRoughness(uv.y);
+      float trailingEdge = trailingBase + edgeRoughness(uv.y + 11.7) * 0.82;
+      float edgeAA = max(0.0015, 1.5 / u_resolution.x);
+      float coverage = smoothstep(-edgeAA, edgeAA, leadingEdge - uv.x)
+        * smoothstep(-edgeAA, edgeAA, uv.x - trailingEdge);
+
+      vec2 broadCoord = vec2(uv.x * 3.2 - time * 0.19, uv.y * 8.5 + time * 0.035);
+      float broad = fbm(broadCoord);
+      vec2 flowCoord = vec2(
+        uv.x * 6.4 - time * 0.34 + (broad - 0.5) * 0.72,
+        uv.y * 21.0 + (broad - 0.5) * 2.2
+      );
+      float detail = fbm(flowCoord);
+      float fine = fbm(flowCoord * 2.35 + vec2(-time * 0.12, time * 0.08));
+
+      float longPhase = uv.x * 16.0 + uv.y * 2.8 - time * 7.2 + (broad - 0.5) * 2.0;
+      float shortPhase = uv.x * 31.0 - uv.y * 7.0 - time * 12.0 + (detail - 0.5) * 2.5;
+      vec3 normal = normalize(vec3(
+        -0.42 * cos(longPhase) - 0.22 * cos(shortPhase),
+        -0.12 * cos(longPhase) + 0.07 * cos(shortPhase),
+        1.0
+      ));
+      vec3 lightDirection = normalize(vec3(-0.38, 0.48, 0.79));
+      vec3 viewDirection = vec3(0.0, 0.0, 1.0);
+      float diffuse = max(dot(normal, lightDirection), 0.0);
+      float specular = pow(max(dot(reflect(-lightDirection, normal), viewDirection), 0.0), 24.0);
+
+      float colorMix = smoothstep(0.14, 0.82, detail * 0.58 + fine * 0.34 + broad * 0.18);
+      vec3 water = mix(vec3(0.01, 0.12, 0.23), vec3(0.018, 0.52, 0.57), colorMix);
+      water *= 0.78 + diffuse * 0.34 + detail * 0.24;
+      float ridgedReflection = pow(max(1.0 - abs(detail * 2.0 - 1.0), 0.0), 5.0);
+      float shimmer = pow(max(sin(longPhase * 0.86 + detail * 2.6), 0.0), 18.0);
+      water += vec3(0.24, 0.62, 0.6) * (specular * 0.74 + ridgedReflection * 0.16 + shimmer * 0.12);
+      water += vec3(0.035, 0.15, 0.16) * pow(max(1.0 - fine, 0.0), 3.0);
+      float signedFront = leadingEdge - uv.x;
+      float curlRim = exp(-pow((signedFront - 0.03 - 0.009 * sin(uv.y * 9.0)) / 0.024, 2.0));
+      float curlTrough = exp(-pow((signedFront - 0.095) / 0.045, 2.0));
+      water *= 1.0 - curlTrough * 0.22;
+      water += vec3(0.34, 0.7, 0.68) * curlRim * 0.26;
+
+      float frontDistance = abs(leadingEdge - uv.x);
+      float rearDistance = abs(uv.x - trailingEdge);
+      float frontCrest = 1.0 - smoothstep(0.003, 0.072, frontDistance);
+      float rearFoam = 1.0 - smoothstep(0.003, 0.05, rearDistance);
+      vec2 foamCoord = vec2(
+        uv.x * 38.0 - time * 1.55 + (broad - 0.5) * 2.4,
+        uv.y * 72.0 + (detail - 0.5) * 3.2
+      );
+      float foamField = fbm(foamCoord);
+      float foamFilaments = smoothstep(0.34, 0.67, foamField) * frontCrest;
+      float splashNoise = noise2(uv * vec2(102.0, 87.0) + vec2(-time * 4.2, time * 0.18));
+      float splashes = smoothstep(0.76, 0.94, splashNoise) * frontCrest * 0.28;
+
+      vec2 bubbleGrid = uv * vec2(36.0, 58.0) - vec2(time * 2.6, 0.0);
+      vec2 bubbleCell = floor(bubbleGrid);
+      vec2 bubbleOffset = fract(bubbleGrid) - 0.5;
+      float bubbleSeed = hash21(bubbleCell);
+      vec2 bubbleCenter = vec2(
+        hash21(bubbleCell + vec2(17.2, 3.8)),
+        hash21(bubbleCell + vec2(8.1, 23.7))
+      ) - 0.5;
+      float bubbleRadius = 0.13 + bubbleSeed * 0.05;
+      float bubbleRing = 1.0 - smoothstep(0.025, 0.055, abs(length(bubbleOffset - bubbleCenter * 0.42) - bubbleRadius));
+      float bubbleZone = max(frontCrest, rearFoam * 0.72);
+      float bubbles = bubbleRing * step(0.958, bubbleSeed) * bubbleZone * 0.24;
+      float trailingFoam = rearFoam * smoothstep(0.28, 0.6, foamField) * 0.82;
+      float surfaceFoam = smoothstep(0.64, 0.86, foamField) * coverage * 0.1;
+
+      float foam = clamp(foamFilaments * 0.9 + splashes + bubbles
+        + trailingFoam + surfaceFoam, 0.0, 0.96);
+      water = mix(water, vec3(0.88, 0.96, 0.92), foam);
+      gl_FragColor = vec4(water, coverage);
+    }
+  `;
+
+  const vertexShader = compileTransitionShader(gl, gl.VERTEX_SHADER, vertexSource);
+  const fragmentShader = compileTransitionShader(gl, gl.FRAGMENT_SHADER, fragmentSource);
+  const program = gl.createProgram();
+  if (!program) throw new Error('Could not allocate the ocean transition compositor.');
+  gl.attachShader(program, vertexShader);
+  gl.attachShader(program, fragmentShader);
+  gl.linkProgram(program);
+  gl.deleteShader(vertexShader);
+  gl.deleteShader(fragmentShader);
+  if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
+    throw new Error(gl.getProgramInfoLog(program) || 'Could not link the ocean transition compositor.');
+  }
+
+  const position = gl.getAttribLocation(program, 'a_position');
+  const resolutionUniform = gl.getUniformLocation(program, 'u_resolution');
+  const progressUniform = gl.getUniformLocation(program, 'u_progress');
+  const timeUniform = gl.getUniformLocation(program, 'u_time');
+  const buffer = gl.createBuffer();
+  if (position < 0 || !resolutionUniform || !progressUniform || !timeUniform || !buffer) {
+    throw new Error('Could not initialize the ocean transition compositor.');
+  }
+
+  gl.useProgram(program);
+  gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]), gl.STATIC_DRAW);
+  gl.enableVertexAttribArray(position);
+  gl.vertexAttribPointer(position, 2, gl.FLOAT, false, 0, 0);
+  gl.clearColor(0, 0, 0, 0);
+
+  return { gl, program, resolutionUniform, progressUniform, timeUniform };
+}
+
+function cancelPageTransition() {
+  transitionToken++;
+  if (transitionFrame) cancelAnimationFrame(transitionFrame);
+  transitionFrame = 0;
+  pendingPageUpdate = null;
+  transitionOverlay.hidden = true;
+}
+
+function finishPageTransition(token) {
+  if (token !== transitionToken) return;
+  const updatePage = pendingPageUpdate;
+  pendingPageUpdate = null;
+  transitionToken++;
+  if (transitionFrame) cancelAnimationFrame(transitionFrame);
+  transitionFrame = 0;
+  transitionOverlay.hidden = true;
+  if (updatePage) updatePage();
+}
+
+function drawOceanTransitionFrame(elapsed) {
+  const { gl, program, resolutionUniform, progressUniform, timeUniform } = oceanCompositor;
+  const pixelRatio = Math.min(window.devicePixelRatio || 1, 1, 1920 / window.innerWidth, 1080 / window.innerHeight);
+  const width = Math.max(1, Math.round(transitionCanvas.clientWidth * pixelRatio));
+  const height = Math.max(1, Math.round(transitionCanvas.clientHeight * pixelRatio));
+  if (transitionCanvas.width !== width || transitionCanvas.height !== height) {
+    transitionCanvas.width = width;
+    transitionCanvas.height = height;
+  }
+
+  gl.viewport(0, 0, width, height);
+  gl.clear(gl.COLOR_BUFFER_BIT);
+  gl.useProgram(program);
+  gl.uniform2f(resolutionUniform, width, height);
+  gl.uniform1f(progressUniform, Math.min(elapsed / transitionDuration, 1));
+  gl.uniform1f(timeUniform, elapsed / 1000);
+  gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+}
+
+function animateOceanTransition(token, startTime, pageUpdated, timestamp) {
+  if (token !== transitionToken) return;
+  if (startTime === null) startTime = timestamp;
+  const elapsed = timestamp - startTime;
+  try {
+    drawOceanTransitionFrame(elapsed);
+  } catch (error) {
+    console.warn('Ocean video transition rendering failed; continuing with normal navigation.', error);
+    finishPageTransition(token);
+    return;
+  }
+
+  if (!pageUpdated && elapsed >= routeSwapAt) {
+    pageUpdated = true;
+    const updatePage = pendingPageUpdate;
+    pendingPageUpdate = null;
+    if (updatePage) updatePage();
+  }
+  if (elapsed >= transitionDuration) {
+    finishPageTransition(token);
+    return;
+  }
+  transitionFrame = requestAnimationFrame(nextTimestamp =>
+    animateOceanTransition(token, startTime, pageUpdated, nextTimestamp));
+}
+
+function startPageTransition(updatePage) {
+  if (reducedMotion.matches || !oceanCompositor) {
+    updatePage();
+    return;
+  }
+
+  cancelPageTransition();
+  const token = transitionToken;
+  pendingPageUpdate = updatePage;
+  transitionOverlay.hidden = false;
+  transitionFrame = requestAnimationFrame(timestamp =>
+    animateOceanTransition(token, null, false, timestamp));
+}
+
+function navigateToView(id, afterRoute) {
+  const hash = `#${id}`;
+  if (!views.some(view => view.id === id)) return;
+
+  if (activeViewId() === id) {
+    if (location.hash !== hash) {
+      history.pushState(null, '', hash);
+      lastObservedHash = location.hash;
+    }
+    if (afterRoute) afterRoute();
+    return;
+  }
+
+  history.pushState(null, '', hash);
+  lastObservedHash = location.hash;
+  startPageTransition(() => {
+    route();
+    if (afterRoute) afterRoute();
+  });
+}
+
+function handleLocationChange() {
+  const hash = location.hash;
+  if (hash === lastObservedHash) return;
+  lastObservedHash = hash;
+  startPageTransition(() => route());
+}
+
+addEventListener('hashchange', handleLocationChange);
+addEventListener('popstate', handleLocationChange);
+document.addEventListener('click', event => {
+  if (!(event.target instanceof Element)) return;
+  const link = event.target.closest('a[href^="#"]');
+  if (!link || link.target === '_blank' || link.hasAttribute('download')
+    || event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+
+  const id = link.hash.slice(1);
+  if (!views.some(view => view.id === id)) return;
+  event.preventDefault();
+
+  if (activeViewId() === id) {
+    if (location.hash !== `#${id}`) {
+      history.pushState(null, '', `#${id}`);
+      lastObservedHash = location.hash;
+    }
+    window.scrollTo({ top: 0, behavior: reducedMotion.matches ? 'auto' : 'smooth' });
+    return;
+  }
+  navigateToView(id);
+});
+try {
+  oceanCompositor = createOceanCompositor();
+} catch (error) {
+  console.warn('Procedural ocean transition is disabled; page navigation will continue without an overlay.', error);
+}
 route();
 
 const heroVideo = document.getElementById('heroVideo');
-const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
 const siteIntro = document.getElementById('siteIntro');
 if (siteIntro) {
   if (document.body.classList.contains('inner') || reducedMotion.matches) {
@@ -102,7 +433,16 @@ heroVideo.addEventListener('error', () => {
   console.error('The homepage video failed to load; using the poster image instead.');
 });
 reducedMotion.addEventListener('change', () => {
-  if (reducedMotion.matches) heroVideo.pause();
+  if (!reducedMotion.matches) return;
+  const updatePage = pendingPageUpdate;
+  cancelPageTransition();
+  document.querySelectorAll('.water-ripple').forEach(ripple => {
+    const target = ripple.parentElement;
+    ripple.remove();
+    if (target && !target.querySelector('.water-ripple')) target.classList.remove('ripple-surface');
+  });
+  if (updatePage) updatePage();
+  heroVideo.pause();
 });
 if (reducedMotion.matches) heroVideo.pause();
 
@@ -523,8 +863,7 @@ roomList.addEventListener('click', e => {
 
 /* ---------- Search: menu items, rooms, FAQs and pages ---------- */
 function goDish(tab, n) {
-  location.hash = '#menu';
-  setTimeout(() => {
+  navigateToView('menu', () => {
     showTab(tab);
     const li = [...body.querySelectorAll('li')].find(x => x.dataset.n === n);
     if (!li) return;
@@ -532,18 +871,18 @@ function goDish(tab, n) {
     li.scrollIntoView({ block: 'center' });
     li.classList.add('hit');
     setTimeout(() => li.classList.remove('hit'), 1800);
-  }, 80);
+  });
 }
 const FAQS = [...document.querySelectorAll('#faq details')];
 const INDEX = [
   ...Object.entries(MENU).flatMap(([tab, gs]) => gs.flatMap(g => g.i.map(([n, p, note]) =>
     ({ t: n, s: 'Menu: ' + tab, k: `${note || ''} ${g.t}`, go: () => goDish(tab, n) })))),
-  ...ROOMS.map((r, i) => ({ t: r.n, s: 'Stay', k: r.f.join(' '), go: () => { location.hash = '#beds'; openRoom(i); } })),
+  ...ROOMS.map((r, i) => ({ t: r.n, s: 'Stay', k: r.f.join(' '), go: () => navigateToView('beds', () => openRoom(i)) })),
   ...FAQS.map(d => ({ t: d.querySelector('summary').textContent, s: 'FAQs & Policies', k: d.textContent,
-    go: () => { location.hash = '#faq'; setTimeout(() => { FAQS.forEach(x => x.open = x === d); d.scrollIntoView({ block: 'center' }); }, 80); } })),
-  { t: 'Events and reservations', s: 'Page', k: 'event party birthday wedding book reserve', go: () => location.hash = '#events' },
-  { t: 'Contact us', s: 'Page', k: 'phone email address facebook instagram social', go: () => location.hash = '#contact' },
-  { t: 'About us', s: 'Page', k: 'story gallery photos', go: () => location.hash = '#about' }
+    go: () => navigateToView('faq', () => { FAQS.forEach(x => x.open = x === d); d.scrollIntoView({ block: 'center' }); }) })),
+  { t: 'Events and reservations', s: 'Page', k: 'event party birthday wedding book reserve', go: () => navigateToView('events') },
+  { t: 'Contact us', s: 'Page', k: 'phone email address facebook instagram social', go: () => navigateToView('contact') },
+  { t: 'About us', s: 'Page', k: 'story gallery photos', go: () => navigateToView('about') }
 ];
 const sOv = document.getElementById('search'), q = document.getElementById('q'), res = document.getElementById('res');
 const closeSearch = () => sOv.hidden = true;
@@ -572,4 +911,51 @@ addEventListener('keydown', e => {
     }
     closeSearch();
   }
+});
+
+const revealGroups = [
+  ['.banner h2,.page>.wrap>.lead,.page>.wrap>h3', 'text'],
+  ['.featured-card,.room,.contact-grid>div,.discover-card', 'card'],
+  ['.mosaic figure,.carousel-track>.ph', 'image'],
+  ['#faq .wrap>details,.table-inquiry', 'panel']
+];
+
+if ('IntersectionObserver' in window && !reducedMotion.matches) {
+  const revealObserver = new IntersectionObserver(entries => {
+    entries.forEach(entry => {
+      if (!entry.isIntersecting) return;
+      entry.target.classList.add('is-revealed');
+      revealObserver.unobserve(entry.target);
+    });
+  }, { threshold: .12, rootMargin: '0px 0px -5% 0px' });
+
+  revealGroups.forEach(([selector, style]) => {
+    document.querySelectorAll(selector).forEach((element, index) => {
+      element.classList.add('ocean-reveal', `ocean-reveal--${style}`);
+      element.style.setProperty('--reveal-delay', `${Math.min(index, 4) * 65}ms`);
+      revealObserver.observe(element);
+    });
+  });
+}
+
+document.addEventListener('click', event => {
+  if (reducedMotion.matches || !(event.target instanceof Element)) return;
+  const target = event.target.closest('.btn,.nav-book,.site-nav>a:not(.nav-book),.search-toggle,.menu-toggle,.carousel-controls button,.tile,.discover-card,.carousel-track>.ph,.mosaic figure,footer .social a');
+  if (!target) return;
+
+  const bounds = target.getBoundingClientRect();
+  const diameter = Math.max(72, Math.min(220, Math.max(bounds.width, bounds.height) * 1.4));
+  const x = event.detail === 0 ? bounds.width / 2 : event.clientX - bounds.left;
+  const y = event.detail === 0 ? bounds.height / 2 : event.clientY - bounds.top;
+  const ripple = document.createElement('span');
+  target.classList.add('ripple-surface');
+  ripple.className = 'water-ripple';
+  ripple.style.setProperty('--ripple-size', `${diameter}px`);
+  ripple.style.left = `${x - diameter / 2}px`;
+  ripple.style.top = `${y - diameter / 2}px`;
+  target.append(ripple);
+  ripple.addEventListener('animationend', () => {
+    ripple.remove();
+    if (!target.querySelector('.water-ripple')) target.classList.remove('ripple-surface');
+  }, { once: true });
 });
