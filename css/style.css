@@ -29,6 +29,19 @@ a{color:inherit}
 [hidden]{display:none!important}
 :focus-visible{outline:2px solid var(--coral);outline-offset:3px}
 
+.intro-screen{position:fixed;inset:0;z-index:100;display:grid;place-items:center;overflow:hidden;background:var(--sand);animation:intro-exit .5s ease 1.2s forwards}
+.intro-screen img{position:relative;z-index:2;width:clamp(8rem,20vw,11rem);height:auto;animation:logo-spin-in 1.5s cubic-bezier(.2,.75,.3,1) both}
+.intro-ocean{position:absolute;right:-5%;bottom:0;left:-5%;z-index:1;width:110%;height:min(62vh,38rem);overflow:visible;animation:ocean-rise 1.25s cubic-bezier(.22,.68,.24,1) .1s both}
+.intro-wave{transform-box:fill-box;transform-origin:center;animation:wave-drift 1.8s ease-in-out .2s infinite alternate}
+.intro-wave-back{fill:#8bb9b4}
+.intro-wave-mid{fill:var(--sea);animation-delay:.05s}
+.intro-wave-front{fill:var(--navy);animation-delay:.1s}
+@keyframes logo-spin-in{from{opacity:0;transform:rotate(-360deg) scale(.72)}to{opacity:1;transform:rotate(0) scale(1)}}
+@keyframes intro-exit{to{opacity:0;visibility:hidden;pointer-events:none}}
+@keyframes ocean-rise{from{transform:translateY(65%)}to{transform:translateY(0)}}
+@keyframes wave-drift{from{transform:translateY(7px)}to{transform:translateY(-7px)}}
+body.inner .intro-screen{display:none}
+
 /* Header */
 .site-header{position:fixed;top:0;right:0;left:0;width:100%;z-index:20;isolation:isolate;display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:clamp(1rem,3vw,2.75rem);min-height:6rem;padding:.45rem clamp(1.25rem,5vw,4.5rem);border-bottom:1px solid transparent;background:transparent;backdrop-filter:none;color:var(--header-cream);box-shadow:none;transition:transform .38s cubic-bezier(.22,.68,.24,1),background .25s,border-color .25s,box-shadow .25s,color .25s}
 .site-header.is-scrolled{border-bottom-color:rgba(24,59,85,.10);background:#fff;color:var(--navy);box-shadow:0 6px 22px rgba(8,28,37,.06)}

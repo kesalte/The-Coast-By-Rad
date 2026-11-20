@@ -88,6 +88,16 @@ route();
 
 const heroVideo = document.getElementById('heroVideo');
 const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+const siteIntro = document.getElementById('siteIntro');
+if (siteIntro) {
+  if (document.body.classList.contains('inner') || reducedMotion.matches) {
+    siteIntro.hidden = true;
+  } else {
+    siteIntro.addEventListener('animationend', event => {
+      if (event.target === siteIntro && event.animationName === 'intro-exit') siteIntro.hidden = true;
+    });
+  }
+}
 heroVideo.addEventListener('error', () => {
   console.error('The homepage video failed to load; using the poster image instead.');
 });
