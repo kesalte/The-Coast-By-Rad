@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Coast by RAD | Beachfront B&amp;B Café in Talisay</title>
+<meta name="description" content="Boutique beachfront stay and café in San Jose, Talisay, Camarines Norte.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:opsz,wght@6..96,500;6..96,600&family=Cormorant+Garamond:wght@500;600&family=DM+Sans:wght@400;500;600&family=Jost:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<header class="site-header">
+  <a class="brand" href="#home" aria-label="The Coast by RAD home"><img src="images/brand-logo.png" alt="The Coast by RAD"></a>
+  <nav class="site-nav" id="primaryNav" aria-label="Main navigation">
+    <a href="#faq">FAQs &amp; Policies</a>
+    <a href="#about">About Us</a>
+    <a href="#contact">Contact Us</a>
+    <a class="nav-book" href="#beds">Book a stay</a>
+  </nav>
+  <div class="header-tools">
+    <button class="search-toggle" id="searchBtn" type="button" aria-label="Search"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.8" cy="10.8" r="6.8"/><path d="m16 16 4.2 4.2"/></svg></button>
+    <button class="menu-toggle" id="menuToggle" type="button" aria-label="Open navigation" aria-expanded="false" aria-controls="primaryNav"><span aria-hidden="true"></span></button>
+  </div>
+</header>
+
+<main>
+  <!-- HOME -->
+  <section class="view" id="home">
+    <div class="home ph">
+      <video class="home-video" id="heroVideo" autoplay muted loop playsinline preload="auto" poster="images/hero.jpg" aria-hidden="true">
+        <source src="images/hero-video.mp4" type="video/mp4">
+      </video>
+      <div>
+        <p class="hero-eyebrow">The coast of Talisay</p>
+        <h1>The Coast<small>by RAD</small></h1>
+        <p class="tag">Stay by the sea &bull; Celebrate by the shore &bull; Savor every moment</p>
+        <div class="actions hero-actions"><a class="btn" href="#events">Plan an event</a><a class="btn ghost" href="#beds">See the rooms</a></div>
+        <div class="tiles">
+          <a class="tile ph" href="#menu"><img src="images/tile-menu.jpg" alt="The café"><span>Café</span></a>
+          <a class="tile ph" href="#beds"><img src="images/tile-beds.jpg" alt="A guest room"><span>Stay</span></a>
+          <a class="tile ph" href="#events"><img src="images/tile-events.jpg" alt="The event hall"><span>Events</span></a>
+        </div>
+      </div>
+      <svg class="wave" viewBox="0 0 1440 80" preserveAspectRatio="none" aria-hidden="true"><path d="M0 40C240 90 480 0 720 30S1200 80 1440 20V80H0Z" fill="var(--sand)"/></svg>
+    </div>
+    <div class="wrap welcome">
+      <p class="section-kicker">Life moves beautifully by the water</p>
+      <h2>A slower kind of luxury.</h2>
+      <p class="lead">Wake to ocean light, linger over breakfast, and let the shore set the pace for a stay that feels entirely your own.</p>
+      <div class="carousel photo-carousel" id="homeGallery" aria-label="Photos of The Coast by RAD"></div>
+      <p class="policy-link"><a href="#faq">Guest policies &amp; FAQs</a></p>
+    </div>
+  </section>
+
+  <!-- MENU -->
+  <section class="view page" id="menu" hidden>
+    <h2>Café</h2>
+    <p class="lead">Long lunches, sunset cocktails, and coffee worth lingering over—discover a café made for unhurried days beside the sea.</p>
+    <section class="featured-menu">
+      <h3>Featured drinks &amp; food</h3>
+      <div class="featured-grid" id="featuredItems"></div>
+    </section>
+    <h3 class="menu-heading">Full menu</h3>
+    <p class="note hint">Tap any dish to see its photo.</p>
+    <div class="tabs" id="tabs" role="tablist"></div>
+    <div id="menuBody"></div>
+    <section class="table-inquiry">
+      <h3>Table reservation inquiry</h3>
+      <p class="note">Send us your preferred date and time. Your request is an inquiry only and is subject to availability and confirmation.</p>
+      <form id="tableReservation">
+        <label>Full name<input name="name" required></label>
+        <label>Phone or email<input name="contact" required></label>
+        <label>Preferred date<input type="date" name="date" required></label>
+        <label>Preferred time<input type="time" name="time" required></label>
+        <label>Number of guests<input type="number" name="guests" min="1" required></label>
+        <label class="wide">Notes<textarea name="notes" rows="3"></textarea></label>
+        <button class="btn wide" type="submit">Send table reservation inquiry</button>
+        <p class="note wide" id="tableSent" hidden>Your email app should open with your inquiry. Your table is not reserved until confirmed by The Coast by RAD.</p>
+      </form>
+    </section>
+  </section>
+
+  <!-- BEDS -->
+  <section class="view page" id="beds" hidden>
+    <h2>Stay</h2>
+    <p class="lead">Settle into a beautifully relaxed room just moments from the shore. Every stay includes breakfast and the freedom to do nothing at all.</p>
+    <div class="stay-search">
+      <form id="roomSearch">
+        <label>Check-in<input id="stayCheckIn" name="checkIn" type="date" required></label>
+        <label>Check-out<input id="stayCheckOut" name="checkOut" type="date" required></label>
+        <label>Guests
+          <select id="stayGuests" name="guests">
+            <option value="1">1 guest</option><option value="2" selected>2 guests</option>
+            <option value="3">3 guests</option><option value="4">4 guests</option>
+            <option value="5">5 guests</option><option value="6">6 guests</option>
+          </select>
+        </label>
+        <button class="btn" type="submit">See prices</button>
+      </form>
+      <p class="stay-summary" id="staySummary" hidden></p>
+    </div>
+    <div class="rooms" id="rooms"></div>
+    <p class="note" id="roomNoResults" hidden>No listed room fits that guest count. Contact us and we can discuss your stay.</p>
+    <p class="note">Check-in 2:00 PM, check-out 12:00 NN. A 50% deposit secures a direct booking. Extra adults are &#8369;500 per night (room only) or &#8369;825 with breakfast; children 0&ndash;6 stay free on existing beds.</p>
+    <div class="actions">
+      <a class="btn ghost" href="tel:+639661922068">Call +63 966 192 2068</a>
+    </div>
+    <div class="modal reservation-modal" id="reservationModal" hidden>
+      <section class="panel reservation-panel" role="dialog" aria-modal="true" aria-labelledby="reservationTitle">
+        <button class="x" id="closeReservation" type="button" aria-label="Close reservation inquiry">&times;</button>
+        <p class="eyebrow">Reservation Inquiry</p>
+        <h3 id="reservationTitle"></h3>
+        <p class="price" id="reservationRate"></p>
+        <form id="roomReservation">
+          <h4 class="form-section-title">Your stay</h4>
+          <div class="reservation-grid">
+            <label>Check-in<input id="reservationCheckIn" name="checkIn" type="date" required></label>
+            <label>Check-out<input id="reservationCheckOut" name="checkOut" type="date" required></label>
+            <label>Guests<select id="reservationGuests" name="guests" required></select></label>
+            <label>Estimated arrival
+              <select name="arrival">
+                <option>2:00 PM - 4:00 PM</option><option>4:00 PM - 6:00 PM</option>
+                <option>6:00 PM - 8:00 PM</option><option>After 8:00 PM</option><option>Not sure yet</option>
+              </select>
+            </label>
+          </div>
+          <h4 class="form-section-title">Guest details</h4>
+          <div class="reservation-grid">
+            <label>First name<input name="firstName" autocomplete="given-name" required></label>
+            <label>Last name<input name="lastName" autocomplete="family-name" required></label>
+            <label>Email<input name="email" type="email" autocomplete="email" required></label>
+            <label>Mobile number<input name="mobile" type="tel" autocomplete="tel" placeholder="09XX XXX XXXX" required></label>
+            <label class="wide">Special requests <span>(optional)</span><textarea name="requests" rows="3" placeholder="Celebrations, dietary needs, extra bed..."></textarea></label>
+          </div>
+          <div class="reservation-estimate">
+            <p id="reservationEstimate"></p>
+            <p class="note">This is an inquiry only, not a confirmed reservation. Availability and final details will be confirmed by The Coast by RAD. No payment is collected through this form.</p>
+          </div>
+          <button class="btn wide" type="submit">Send Reservation Inquiry</button>
+          <p class="note wide" id="roomInquirySent" hidden>Your email app should open with your inquiry. Your stay is not reserved until confirmed by The Coast by RAD.</p>
+        </form>
+      </section>
+    </div>
+  </section>
+
+  <!-- EVENTS -->
+  <section class="view page" id="events" hidden>
+    <h2>Events</h2>
+    <p class="lead">From intimate celebrations to milestone gatherings, create a memorable occasion in a bright coastal setting shaped around your guests.</p>
+    <div class="mosaic" data-photos="tile-events,gallery-20,gallery-04,gallery-02,gallery-05"></div>
+    <p class="note">Ask us about current event packages, inclusions, and availability. Details are shared upon inquiry.</p>
+    <form id="reserve">
+      <label>Full name<input name="name" required></label>
+      <label>Phone or email<input name="contact" required></label>
+      <label>Type of event
+        <select name="type"><option>Birthday</option><option>Wedding</option><option>Corporate</option><option>Reunion</option><option>Other</option></select>
+      </label>
+      <label>Preferred date<input type="date" name="date" required></label>
+      <label>Number of guests<input type="number" name="guests" min="1" required></label>
+      <label class="wide">Notes<textarea name="notes" rows="4"></textarea></label>
+      <button class="btn wide" type="submit">Send reservation inquiry</button>
+      <p class="note wide" id="sent" hidden>Thank you. Your email app should open with your event inquiry. If it does not, email business@radventures.ph or call +63 966 192 2068.</p>
+    </form>
+  </section>
+
+  <!-- FAQ -->
+  <section class="view page" id="faq" hidden>
+    <h2>FAQs &amp; Guest Policies</h2>
+    <details open><summary>What time are check-in and check-out?</summary><p>Check-in is at 2:00 PM and check-out is at 12:00 NN. Early check-in or late check-out depends on availability and may carry a fee.</p></details>
+    <details><summary>Is breakfast included?</summary><p>Yes. Complimentary breakfast is served daily from 7:00 AM to 10:00 AM at the café hall.</p></details>
+    <details><summary>How do deposits and cancellations work?</summary><p>Direct bookings need a 50% deposit, with the balance paid on arrival. Deposits are non-refundable, but if you cancel at least 14 days before check-in, the deposit becomes credit for a stay within 90 days. Bookings made through travel sites follow that platform's policy.</p></details>
+    <details><summary>Can I rebook my stay?</summary><p>Rebooking at least 14 days before check-in is free, subject to availability. Within 14 days there is a &#8369;1,000 rebooking fee. Typhoon and other force majeure cases get free date changes with credit valid for 90 days.</p></details>
+    <details><summary>Is there a security deposit?</summary><p>A refundable &#8369;1,000 deposit per room is collected at check-in and returned after a routine room inspection. A valid government ID is required from every guest.</p></details>
+    <details><summary>What are the pool hours?</summary><p>The pool is open to registered guests from 7:00 AM to 10:00 PM. There is no lifeguard on duty, and children must be supervised by an adult at all times.</p></details>
+    <details><summary>Can I bring children, pets or outside food?</summary><p>Children 0&ndash;6 stay free on existing beds (maximum 2 per room); ages 7 and up are charged as extra adults. Pets need advance approval. Outside food and drinks in dining areas are not allowed, or are subject to a corkage fee.</p></details>
+    <details><summary>Is smoking allowed?</summary><p>Smoking and vaping are not allowed in rooms or enclosed guest areas. Outdoor smoking areas are provided. Quiet hours run from 10:00 PM to 7:00 AM.</p></details>
+  </section>
+
+  <!-- ABOUT -->
+  <section class="view page" id="about" hidden>
+    <h2>About The Coast by RAD</h2>
+    <p class="lead">The Coast by RAD is a beachfront boutique bed and breakfast and café located in San Jose, Talisay, Camarines Norte.</p>
+    <p>Established through the owner's passion for coffee, entrepreneurship, and coastal living, the business has grown from a private residence for personal gatherings into a destination offering accommodation, dining, and event services.</p>
+    <p>With its beachfront setting and welcoming atmosphere, The Coast by RAD provides guests with an opportunity to enjoy comfortable stays, café offerings, and meaningful gatherings. Its goal is to bring together the convenience of accommodation, the enjoyment of dining, and the appeal of coastal relaxation in one place.</p>
+    <section class="about-discover">
+      <h2>Discover the Coast</h2>
+      <p class="lead">Explore the different experiences available at The Coast by RAD.</p>
+      <div class="discover-grid">
+        <a class="discover-card" href="#menu"><h3>Café</h3><p>Discover the café's selection of coffee, food, and beverages, offering guests a place to enjoy good food in a beachfront setting.</p></a>
+        <a class="discover-card" href="#beds"><h3>Stay</h3><p>Enjoy comfortable accommodations suited to different guest needs, from Deluxe Rooms and Family Rooms to the Master Suite.</p></a>
+        <a class="discover-card" href="#events"><h3>Events</h3><p>Make special occasions more memorable with spaces designed for private gatherings, celebrations, and other events.</p></a>
+      </div>
+    </section>
+    <h3 class="gallery-heading">Gallery</h3>
+    <div class="gallery carousel" id="gallery" aria-label="The Coast by RAD photo gallery"></div>
+  </section>
+
+  <!-- CONTACT -->
+  <section class="view page" id="contact" hidden>
+    <h2>Contact us</h2>
+    <p class="lead">We would love to hear from you.</p>
+    <dl class="contact-grid">
+      <div><dt><svg class="contact-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s7-6.1 7-12A7 7 0 1 0 5 9c0 5.9 7 12 7 12Z"/><circle cx="12" cy="9" r="2.4"/></svg>Address</dt><dd><a href="https://maps.google.com/?q=Purok+2%2C+Pres.+Cory+Aquino+Blvd%2C+San+Jose%2C+Talisay%2C+Camarines+Norte+4602" target="_blank" rel="noopener">Purok 2, Pres. Cory Aquino Blvd, San Jose, Talisay, Camarines Norte 4602</a></dd></div>
+      <div><dt><svg class="contact-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M7.2 2.8 10 7.6 8.1 9.5a15.5 15.5 0 0 0 6.4 6.4l1.9-1.9 4.8 2.8-.7 3.4c-.2.9-1 1.5-1.9 1.5C10.1 21.7 2.3 13.9 2.3 5.4c0-.9.6-1.7 1.5-1.9l3.4-.7Z"/></svg>Phone</dt><dd><a href="tel:+639661922068">+63 966 192 2068</a></dd></div>
+      <div><dt><svg class="contact-icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="2.5" y="4.5" width="19" height="15" rx="1.5"/><path d="m3.5 6 8.5 7 8.5-7"/></svg>Email</dt><dd><a href="mailto:business@radventures.ph">business@radventures.ph</a></dd></div>
+      <div><dt>Café hours</dt><dd>To be confirmed</dd></div>
+      <div><dt>Social</dt><dd class="social"><a href="https://www.facebook.com/share/18sax9fRLp/" target="_blank" rel="noopener">Facebook</a> <a href="https://www.instagram.com/thecoastbyrad" target="_blank" rel="noopener">Instagram</a></dd></div>
+    </dl>
+  </section>
+</main>
+
+<div class="search" id="search" hidden>
+  <div class="sbox">
+    <input id="q" type="search" placeholder="Search the menu, rooms and FAQs" autocomplete="off" aria-label="Search">
+    <button id="sx" aria-label="Close search">&times;</button>
+    <ul id="res"></ul>
+  </div>
+</div>
+
+<footer>
+  <div class="foot">
+    <div class="footer-brand"><img class="foot-logo" src="images/brand-logo.png" alt="The Coast by RAD"><p>The first and only boutique beachfront B&amp;B café in San Jose, Talisay.</p></div>
+    <div class="footer-details"><p><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s7-6.1 7-12A7 7 0 1 0 5 9c0 5.9 7 12 7 12Z"/><circle cx="12" cy="9" r="2.4"/></svg><a href="https://maps.google.com/?q=Purok+2%2C+Pres.+Cory+Aquino+Blvd%2C+San+Jose%2C+Talisay%2C+Camarines+Norte+4602" target="_blank" rel="noopener">Purok 2, Pres. Cory Aquino Blvd, San Jose, Talisay, Camarines Norte 4602</a></p><p><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7.2 2.8 10 7.6 8.1 9.5a15.5 15.5 0 0 0 6.4 6.4l1.9-1.9 4.8 2.8-.7 3.4c-.2.9-1 1.5-1.9 1.5C10.1 21.7 2.3 13.9 2.3 5.4c0-.9.6-1.7 1.5-1.9l3.4-.7Z"/></svg><a href="tel:+639661922068">+63 966 192 2068</a></p><p><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2.5" y="4.5" width="19" height="15" rx="1.5"/><path d="m3.5 6 8.5 7 8.5-7"/></svg><a href="mailto:business@radventures.ph">business@radventures.ph</a></p><p><a href="#faq">Guest policies &amp; FAQs</a></p></div>
+    <div class="social"><a href="https://www.facebook.com/share/18sax9fRLp/" target="_blank" rel="noopener">Facebook</a><a href="https://www.instagram.com/thecoastbyrad" target="_blank" rel="noopener">Instagram</a></div>
+  </div>
+  <p class="copy">&copy; 2026 The Coast by RAD</p>
+</footer>
+
+<script src="js/script.js"></script>
+</body>
+</html>
