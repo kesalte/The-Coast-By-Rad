@@ -55,6 +55,7 @@ a{color:inherit}
   background:url(../images/hero.jpg) center/cover}
 .home::before{content:"";position:absolute;inset:0;z-index:1;background:linear-gradient(180deg,rgba(17,55,79,.12),rgba(24,59,85,.28) 48%,rgba(14,51,66,.76));pointer-events:none}
 .home-video{position:absolute;inset:0;z-index:0;width:100%;height:100%;object-fit:cover}
+.temporary-video{position:absolute;right:.65rem;bottom:.65rem;z-index:4;padding:.28rem .65rem;border:1px solid rgba(255,255,255,.35);border-radius:99px;background:rgba(21,55,70,.78);color:#fff;font:500 .72rem/1.2 var(--sans);letter-spacing:.04em;pointer-events:none}
 .home>div{position:relative;z-index:2;width:min(100%,76rem)}
 h1{font:500 clamp(3.2rem,8vw,7.2rem)/.9 var(--serif);letter-spacing:-.045em;text-transform:none;text-shadow:0 4px 28px rgba(0,0,0,.16)}
 h1 small{display:block;margin-top:.85rem;font-size:.24em;letter-spacing:.38em;text-transform:uppercase}
