@@ -51,7 +51,7 @@ a{color:inherit}
 .ph::after{content:"Temporary photo";position:absolute;right:.65rem;bottom:.65rem;z-index:4;padding:.28rem .65rem;border:1px solid rgba(255,255,255,.35);border-radius:99px;background:rgba(21,55,70,.78);color:#fff;font:500 .72rem/1.2 var(--sans);letter-spacing:.04em;pointer-events:none}
 
 /* Home */
-.home{min-height:calc(100vh - 6.2rem);min-height:calc(100svh - 6.2rem);display:grid;place-items:center;padding:8rem clamp(1rem,4vw,3rem) 5.5rem;text-align:center;color:#fff;
+.home{position:relative;min-height:calc(100vh - 6.2rem);min-height:calc(100svh - 6.2rem);display:grid;place-items:center;padding:8rem clamp(1rem,4vw,3rem) 5.5rem;text-align:center;color:#fff;
   background:url(../images/hero.jpg) center/cover}
 .home::before{content:"";position:absolute;inset:0;z-index:1;background:linear-gradient(180deg,rgba(17,55,79,.12),rgba(24,59,85,.28) 48%,rgba(14,51,66,.76));pointer-events:none}
 .home-video{position:absolute;inset:0;z-index:0;width:100%;height:100%;object-fit:cover}
