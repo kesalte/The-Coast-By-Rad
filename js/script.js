@@ -23,6 +23,7 @@ function setMobileNavOpen(open) {
   menuToggle.classList.toggle('is-open', open);
   menuToggle.setAttribute('aria-expanded', String(open));
   menuToggle.setAttribute('aria-label', open ? 'Close navigation' : 'Open navigation');
+  if (open) siteHeader.classList.remove('is-hidden');
 }
 menuToggle.addEventListener('click', () => {
   setMobileNavOpen(menuToggle.getAttribute('aria-expanded') !== 'true');
@@ -33,7 +34,23 @@ primaryNav.addEventListener('click', e => {
 document.addEventListener('click', e => {
   if (menuToggle.getAttribute('aria-expanded') === 'true' && !siteHeader.contains(e.target)) setMobileNavOpen(false);
 });
-addEventListener('scroll', () => siteHeader.classList.toggle('is-scrolled', window.scrollY > 24), { passive: true });
+let lastHeaderScrollY = window.scrollY;
+function updateHeaderOnScroll() {
+  const currentScrollY = window.scrollY;
+  const isScrollingDown = currentScrollY > lastHeaderScrollY;
+  const menuOpen = menuToggle.getAttribute('aria-expanded') === 'true';
+
+  siteHeader.classList.toggle('is-scrolled', currentScrollY > 24 || document.body.classList.contains('inner'));
+  if (currentScrollY <= 24 || isScrollingDown === false || menuOpen) {
+    siteHeader.classList.remove('is-hidden');
+  } else if (isScrollingDown && currentScrollY - lastHeaderScrollY > 5 && currentScrollY > 96) {
+    siteHeader.classList.add('is-hidden');
+  }
+
+  lastHeaderScrollY = Math.max(currentScrollY, 0);
+}
+addEventListener('scroll', updateHeaderOnScroll, { passive: true });
+updateHeaderOnScroll();
 
 const scrollUpButton = document.querySelector('.scroll-up');
 const scrollDownButton = document.querySelector('.scroll-down');
@@ -62,6 +79,9 @@ function route() {
   });
   setMobileNavOpen(false);
   window.scrollTo(0, 0);
+  siteHeader.classList.remove('is-hidden');
+  siteHeader.classList.toggle('is-scrolled', current.id !== 'home');
+  lastHeaderScrollY = 0;
 }
 addEventListener('hashchange', route);
 route();
