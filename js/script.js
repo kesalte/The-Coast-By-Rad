@@ -35,6 +35,22 @@ document.addEventListener('click', e => {
 });
 addEventListener('scroll', () => siteHeader.classList.toggle('is-scrolled', window.scrollY > 24), { passive: true });
 
+const scrollUpButton = document.querySelector('.scroll-up');
+const scrollDownButton = document.querySelector('.scroll-down');
+
+function updateScrollButtons() {
+  const atTop = window.scrollY <= 24;
+  const atBottom = window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 24;
+  scrollUpButton.classList.toggle('is-hidden', atTop);
+  scrollDownButton.classList.toggle('is-hidden', atBottom);
+}
+
+scrollUpButton.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
+scrollDownButton.addEventListener('click', () => window.scrollTo({ top: document.documentElement.scrollHeight, behavior: 'smooth' }));
+addEventListener('scroll', updateScrollButtons, { passive: true });
+addEventListener('resize', updateScrollButtons);
+updateScrollButtons();
+
 function route() {
   const id = (location.hash || '#home').slice(1);
   const current = views.find(v => v.id === id) || views[0];
