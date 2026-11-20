@@ -36,10 +36,14 @@ a{color:inherit}
 .intro-wave-back{fill:#8bb9b4}
 .intro-wave-mid{fill:var(--sea);animation-delay:.05s}
 .intro-wave-front{fill:var(--navy);animation-delay:.1s}
+.intro-loading{position:absolute;bottom:clamp(2rem,7vh,4rem);z-index:3;display:grid;justify-items:center;gap:.7rem;color:var(--navy);font:500 .68rem/1.2 var(--nav-font);letter-spacing:.2em;text-align:center;text-transform:uppercase}
+.intro-progress{display:block;width:min(12rem,48vw);height:2px;overflow:hidden;background:rgba(24,59,85,.2)}
+.intro-progress span{display:block;width:100%;height:100%;background:var(--coral);transform:scaleX(0);transform-origin:left center;animation:loading-progress 3.9s linear forwards}
 @keyframes logo-spin-in{from{opacity:0;transform:rotate(-360deg) scale(.72)}to{opacity:1;transform:rotate(0) scale(1)}}
 @keyframes intro-exit{to{opacity:0;visibility:hidden;pointer-events:none}}
 @keyframes ocean-rise{from{transform:translateY(65%)}to{transform:translateY(0)}}
 @keyframes wave-drift{from{transform:translateY(7px)}to{transform:translateY(-7px)}}
+@keyframes loading-progress{to{transform:scaleX(1)}}
 body.inner .intro-screen{display:none}
 
 /* Header */
