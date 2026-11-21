@@ -71,11 +71,13 @@ body.inner .intro-screen{display:none}
 .menu-toggle{display:none}
 
 .ph{position:relative}
+.ph::after{content:"Temporary photo";position:absolute;right:.65rem;bottom:.65rem;z-index:4;padding:.28rem .65rem;border:1px solid rgba(255,255,255,.35);border-radius:99px;background:rgba(21,55,70,.78);color:#fff;font:500 .72rem/1.2 var(--sans);letter-spacing:.04em;pointer-events:none}
 /* Home */
 .home{position:relative;min-height:100vh;min-height:100svh;display:grid;place-items:center;padding:8rem clamp(1rem,4vw,3rem) 5.5rem;text-align:center;color:#fff;
   background:url(../images/hero.jpg) center/cover}
 .home::before{content:"";position:absolute;inset:0;z-index:1;background:linear-gradient(180deg,rgba(17,55,79,.12),rgba(24,59,85,.28) 48%,rgba(14,51,66,.76));pointer-events:none}
 .home-video{position:absolute;inset:0;z-index:0;width:100%;height:100%;object-fit:cover}
+.temporary-video{position:absolute;right:1rem;bottom:5rem;z-index:4;padding:.28rem .65rem;border:1px solid rgba(255,255,255,.35);border-radius:99px;background:rgba(21,55,70,.78);color:#fff;font:500 .72rem/1.2 var(--sans);letter-spacing:.04em;pointer-events:none}
 .home>div{position:relative;z-index:2;width:min(100%,76rem)}
 h1{font:500 clamp(3.2rem,8vw,7.2rem)/.9 var(--serif);letter-spacing:-.045em;text-transform:none;text-shadow:0 4px 28px rgba(0,0,0,.16)}
 h1 small{display:block;margin-top:.85rem;font-size:.24em;letter-spacing:.38em;text-transform:uppercase}
@@ -274,6 +276,7 @@ dd a{color:var(--sea)}
 .tile:nth-child(2){animation-delay:.12s}.tile:nth-child(3){animation-delay:.24s}
 @keyframes rise{from{opacity:0;transform:translateY(18px)}}
 .lb{position:fixed;inset:0;z-index:30;display:grid;place-items:center;padding:1rem;background:rgba(8,24,32,.94);cursor:zoom-out;backdrop-filter:blur(5px)}
+.lb::after{content:"Temporary photo";position:fixed;right:1.25rem;bottom:1.25rem;z-index:31;padding:.35rem .75rem;border:1px solid rgba(255,255,255,.35);border-radius:99px;background:rgba(21,55,70,.82);color:#fff;font:500 .78rem/1.2 var(--sans);letter-spacing:.04em;pointer-events:none}
 .lb img{max-width:92vw;max-height:90vh;border-radius:var(--radius);box-shadow:0 20px 60px rgba(0,0,0,.25)}
 /* Search, back arrow, dish photos, room pop-up, footer */
 .banner .back{position:absolute;top:1.1rem;left:clamp(1.25rem,6vw,5rem);display:grid;place-items:center;width:2.65rem;height:2.65rem;border:1px solid rgba(255,255,255,.62);border-radius:50%;background:rgba(10,30,45,.38);backdrop-filter:blur(8px);color:#fff;font-size:1.3rem;text-decoration:none;transition:background .2s,transform .2s}
