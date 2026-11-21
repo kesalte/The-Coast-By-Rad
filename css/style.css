@@ -376,9 +376,10 @@ body.inner .site-nav .nav-book{border-color:var(--navy);color:var(--navy)}
 .featured-menu>h3,.menu-heading{color:var(--navy)}
 .discover-card{border-color:rgba(16,50,62,.12);background:rgba(250,248,241,.94)}
 .tabs{border-radius:12px;background:rgba(244,240,229,.92);box-shadow:0 8px 22px rgba(24,59,85,.06)}
-.table-inquiry{margin-top:3.5rem;padding:clamp(1.35rem,3vw,2.2rem);border:1px solid rgba(255,255,255,.17);border-radius:var(--radius);background:linear-gradient(135deg,#183b55,#24525d);box-shadow:var(--shadow)}
-.table-inquiry>h3,.table-inquiry .note{color:#f7f2e8}
-.table-inquiry .note{opacity:.82}
+.table-inquiry{margin:3.5rem auto 0;padding:clamp(1.25rem,3vw,2.2rem);border:1px solid rgba(255,255,255,.82);border-radius:var(--radius);background:rgba(248,245,236,.9);box-shadow:var(--shadow)}
+.table-inquiry>h3,.table-inquiry .note{color:var(--navy)}
+.table-inquiry .note{opacity:1}
+.table-inquiry form{max-width:none;margin-top:1.3rem}
 
 .stay-search{border-color:rgba(91,150,153,.22);background:rgba(232,241,235,.9)}
 #beds .rooms+.note{margin-top:2rem;padding:1.15rem 1.35rem;border-left:3px solid var(--soft-gold);border-radius:0 12px 12px 0;background:rgba(248,244,234,.88)}

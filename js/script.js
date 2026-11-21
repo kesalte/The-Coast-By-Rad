@@ -919,10 +919,43 @@ document.getElementById('reserve').addEventListener('submit', e => {
   document.getElementById('sent').hidden = false;
 });
 
-document.getElementById('tableReservation').addEventListener('submit', e => {
+const tableReservation = document.getElementById('tableReservation');
+const tableDate = document.getElementById('tableDate');
+const tableTime = document.getElementById('tableTime');
+
+tableDate.min = today;
+tableDate.addEventListener('change', () => tableDate.setCustomValidity(''));
+tableTime.addEventListener('change', () => tableTime.setCustomValidity(''));
+
+tableReservation.addEventListener('submit', e => {
   e.preventDefault();
+  if (!tableReservation.reportValidity()) return;
+
   const d = Object.fromEntries(new FormData(e.target));
-  const text = `Table reservation inquiry\n\nName: ${d.name}\nContact: ${d.contact}\nPreferred date: ${d.date}\nPreferred time: ${d.time}\nGuests: ${d.guests}\nNotes: ${d.notes || '-'}`;
+  tableDate.setCustomValidity('');
+  tableTime.setCustomValidity('');
+
+  if (d.date < today) {
+    tableDate.setCustomValidity('Choose today or a future date.');
+    tableDate.reportValidity();
+    return;
+  }
+
+  if (d.date === today) {
+    const now = new Date();
+    const selectedTime = d.time.split(':').map(Number);
+    const selectedMinutes = selectedTime[0] * 60 + selectedTime[1];
+    const currentMinutes = now.getHours() * 60 + now.getMinutes();
+    if (selectedMinutes <= currentMinutes) {
+      tableTime.setCustomValidity('Choose a future time.');
+      tableTime.reportValidity();
+      return;
+    }
+  }
+
+  tableDate.setCustomValidity('');
+  tableTime.setCustomValidity('');
+  const text = `Table reservation inquiry\n\nName: ${d.name}\nContact: ${d.contact}\nPreferred date: ${displayDate(d.date)}\nPreferred time: ${d.time}\nGuests: ${d.guests}\nNotes: ${d.notes || '-'}`;
   location.href = `mailto:business@radventures.ph?subject=${encodeURIComponent('Table reservation inquiry')}&body=${encodeURIComponent(text)}`;
   document.getElementById('tableSent').hidden = false;
 });
