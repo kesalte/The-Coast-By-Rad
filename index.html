@@ -7,8 +7,9 @@
 <meta name="description" content="Boutique beachfront stay and café in San Jose, Talisay, Camarines Norte.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:opsz,wght@6..96,500;6..96,600&family=Cormorant+Garamond:wght@500;600&family=DM+Sans:wght@400;500;600&family=Jost:wght@400;500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/style.css?v=13">
+<link rel="preconnect" href="https://cdnjs.cloudflare.com">
+<link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:opsz,wght@6..96,500;6..96,600&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css?v=21">
 </head>
 <body>
 
@@ -43,7 +44,7 @@
   <!-- HOME -->
   <section class="view" id="home">
     <div class="home">
-      <video class="home-video" id="heroVideo" autoplay muted loop playsinline preload="auto" poster="images/hero.jpg" aria-hidden="true">
+      <video class="home-video" id="heroVideo" autoplay muted loop playsinline preload="metadata" poster="images/hero.jpg" aria-hidden="true">
         <source src="images/hero-video.mp4" type="video/mp4">
       </video>
       <span class="temporary-video" aria-hidden="true">Temporary video</span>
@@ -58,51 +59,44 @@
           <a class="tile ph" href="#events"><img src="images/tile-events.jpg" alt="The event hall"><span>Events</span></a>
         </div>
       </div>
-      <svg class="wave" viewBox="0 0 1440 80" preserveAspectRatio="none" aria-hidden="true"><path d="M0 40C240 90 480 0 720 30S1200 80 1440 20V80H0Z" fill="var(--sand)"/></svg>
     </div>
     <section class="coast-experiences" id="coastExperiences" aria-labelledby="coast-experiences-title">
-      <div class="coast-experiences-sticky">
-        <div class="coast-experiences-bg" aria-hidden="true">
-          <img src="images/hero.jpg" alt="">
-        </div>
-        <div class="coast-experiences-stage">
-          <div class="coast-experiences-intro">
+      <div class="coast-experiences-inner">
+        <div class="coast-experiences-intro">
+          <div>
             <p class="section-kicker">Things to do by the coast</p>
             <h2 id="coast-experiences-title">Moments made by the sea</h2>
-            <p class="lead">From slow mornings to golden evenings, discover the simple joys that make time at The Coast unforgettable.</p>
           </div>
-          <div class="coast-experiences-cards" role="list">
-            <article class="experience-card" role="listitem" style="--i:0">
-              <span class="experience-badge">01</span>
-              <span class="experience-photo"><img src="images/tile-menu.jpg" alt="Caf&eacute; mornings by the sea" loading="lazy"></span>
-              <h3>Sunrise breakfasts &amp; caf&eacute; mornings</h3>
-            </article>
-            <article class="experience-card" role="listitem" style="--i:1">
-              <span class="experience-badge">02</span>
-              <span class="experience-photo"><img src="images/tile-beds.jpg" alt="A relaxed coastal stay" loading="lazy"></span>
-              <h3>Unhurried stays by the shore</h3>
-            </article>
-            <article class="experience-card" role="listitem" style="--i:2">
-              <span class="experience-badge">03</span>
-              <span class="experience-photo"><img src="images/gallery-05.jpg" alt="Time spent by the water" loading="lazy"></span>
-              <h3>Slow afternoons on the sand</h3>
-            </article>
-            <article class="experience-card" role="listitem" style="--i:3">
-              <span class="experience-badge">04</span>
-              <span class="experience-photo"><img src="images/tile-events.jpg" alt="A seaside celebration" loading="lazy"></span>
-              <h3>Seaside celebrations &amp; gatherings</h3>
-            </article>
-            <article class="experience-card" role="listitem" style="--i:4">
-              <span class="experience-badge">05</span>
-              <span class="experience-photo"><img src="images/gallery-01.jpg" alt="Sunset by the coast" loading="lazy"></span>
-              <h3>Golden hour &amp; sunset views</h3>
-            </article>
-          </div>
+          <p class="lead">From slow mornings to golden evenings, discover the simple joys that make time at The Coast unforgettable.</p>
         </div>
-        <svg class="coast-experiences-wave" viewBox="0 0 1440 180" preserveAspectRatio="none" aria-hidden="true">
-          <path d="M0,96 C180,40 320,150 520,92 C720,34 860,148 1060,88 C1220,42 1340,110 1440,76 L1440,180 L0,180 Z" fill="var(--sand)"/>
-          <path d="M0,118 C200,70 360,168 560,116 C760,64 900,160 1100,112 C1240,78 1350,128 1440,104 L1440,180 L0,180 Z" fill="rgba(241,238,230,.72)"/>
-        </svg>
+      </div>
+      <div class="coast-experiences-viewport" id="homeGalleryViewport">
+        <div class="coast-experiences-cards" id="homeGalleryTrack" role="list" aria-label="Coastal experiences">
+          <a class="experience-card experience-card--feature" href="#menu" role="listitem">
+            <img src="images/tile-menu.jpg" alt="The Coast by RAD café by the shore" loading="eager" decoding="async" data-parallax>
+            <span class="experience-copy"><span class="experience-number">01 / Café</span><h3>Sunrise breakfasts &amp; caf&eacute; mornings</h3></span>
+          </a>
+          <a class="experience-card" href="#beds" role="listitem">
+            <img src="images/tile-beds.jpg" alt="A guest room at The Coast by RAD" loading="lazy" decoding="async" data-parallax>
+            <span class="experience-copy"><span class="experience-number">02 / Stay</span><h3>Unhurried stays by the shore</h3></span>
+          </a>
+          <a class="experience-card" href="#about" role="listitem">
+            <img src="images/gallery-05.jpg" alt="Lounge seating beside the shoreline" loading="lazy" decoding="async" data-parallax>
+            <span class="experience-copy"><span class="experience-number">03 / Coast</span><h3>Slow afternoons on the sand</h3></span>
+          </a>
+          <a class="experience-card" href="#events" role="listitem">
+            <img src="images/tile-events.jpg" alt="The indoor dining space at The Coast by RAD" loading="lazy" decoding="async" data-parallax>
+            <span class="experience-copy"><span class="experience-number">04 / Gather</span><h3>Seaside celebrations &amp; gatherings</h3></span>
+          </a>
+          <a class="experience-card" href="#about" role="listitem">
+            <img src="images/gallery-20.jpg" alt="An outdoor firepit at night" loading="lazy" decoding="async" data-parallax>
+            <span class="experience-copy"><span class="experience-number">05 / Shore</span><h3>Golden hour &amp; sunset views</h3></span>
+          </a>
+        </div>
+      </div>
+      <div class="coast-experiences-controls">
+        <span>Scroll to explore the coast</span>
+        <div class="coast-experiences-progress" aria-hidden="true"><span id="homeGalleryProgress"></span></div>
       </div>
     </section>
   </section>
@@ -246,8 +240,21 @@
         <a class="discover-card" href="#events"><h3>Events</h3><p>Make special occasions more memorable with spaces designed for private gatherings, celebrations, and other events.</p></a>
       </div>
     </section>
-    <h3 class="gallery-heading">Gallery</h3>
-    <div class="gallery carousel" id="gallery" aria-label="The Coast by RAD photo gallery"></div>
+    <section class="about-gallery" id="aboutGallery" aria-labelledby="galleryTitle">
+      <div class="about-gallery-header">
+        <div>
+          <p class="gallery-eyebrow">Moments at The Coast</p>
+          <h3 class="gallery-heading" id="galleryTitle">Gallery</h3>
+        </div>
+        <div class="gallery-progress-wrap">
+          <p class="gallery-hint">Scroll to explore the photographs</p>
+          <div class="gallery-progress" aria-hidden="true"><span id="galleryProgress"></span></div>
+        </div>
+      </div>
+      <div class="gallery-viewport" id="galleryViewport">
+        <div class="gallery gallery-track" id="gallery" role="list" aria-label="The Coast by RAD photo gallery"></div>
+      </div>
+    </section>
   </section>
 
   <!-- CONTACT -->
@@ -305,6 +312,8 @@
 <div class="ocean-transition" id="oceanTransition" aria-hidden="true" hidden>
   <canvas id="oceanTransitionCanvas"></canvas>
 </div>
-<script src="js/script.js?v=10"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+<script defer src="js/script.js?v=18"></script>
 </body>
 </html>

@@ -15,6 +15,10 @@ function dishPic(n) {
 }
 
 const views = [...document.querySelectorAll('.view')];
+const siteIntro = document.getElementById('siteIntro');
+const heroVideo = document.getElementById('heroVideo');
+let homeGalleryContext = null;
+let aboutGalleryContext = null;
 const siteHeader = document.querySelector('.site-header');
 const primaryNav = document.getElementById('primaryNav');
 const menuToggle = document.getElementById('menuToggle');
@@ -28,6 +32,19 @@ let transitionFrame = 0;
 let pendingPageUpdate = null;
 const transitionDuration = 1600;
 const routeSwapAt = 800;
+
+function syncHeroVideo(viewId) {
+  if (!heroVideo) return;
+  if (viewId !== 'home' || reducedMotion.matches) {
+    heroVideo.pause();
+    return;
+  }
+
+  const playback = heroVideo.play();
+  if (playback && typeof playback.catch === 'function') {
+    playback.catch(error => console.warn('The homepage video could not start.', error));
+  }
+}
 
 function setMobileNavOpen(open) {
   primaryNav.classList.toggle('is-open', open);
@@ -60,7 +77,6 @@ function updateHeaderOnScroll() {
 
   lastHeaderScrollY = Math.max(currentScrollY, 0);
 }
-addEventListener('scroll', updateHeaderOnScroll, { passive: true });
 updateHeaderOnScroll();
 
 const scrollUpButton = document.querySelector('.scroll-up');
@@ -75,8 +91,6 @@ function updateScrollButtons() {
 
 scrollUpButton.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
 scrollDownButton.addEventListener('click', () => window.scrollTo({ top: document.documentElement.scrollHeight, behavior: 'smooth' }));
-addEventListener('scroll', updateScrollButtons, { passive: true });
-addEventListener('resize', updateScrollButtons);
 updateScrollButtons();
 
 function activeViewId() {
@@ -84,22 +98,43 @@ function activeViewId() {
   return active ? active.id : null;
 }
 
+function revertPageGalleryContexts() {
+  if (homeGalleryContext) {
+    homeGalleryContext.revert();
+    homeGalleryContext = null;
+  }
+  if (aboutGalleryContext) {
+    aboutGalleryContext.revert();
+    aboutGalleryContext = null;
+  }
+}
+
 function route() {
   const id = (location.hash || '#home').slice(1);
   const current = views.find(v => v.id === id) || views[0];
+  revertPageGalleryContexts();
   views.forEach(v => {
     v.hidden = v !== current;
   });
   document.body.classList.toggle('inner', current.id !== 'home');
+  if (current.id !== 'home' && siteIntro) {
+    siteIntro.hidden = true;
+    document.body.classList.remove('is-loading');
+  }
   primaryNav.querySelectorAll('a[href^="#"]').forEach(link => {
     if (link.getAttribute('href') === `#${current.id}`) link.setAttribute('aria-current', 'page');
     else link.removeAttribute('aria-current');
   });
   setMobileNavOpen(false);
-  window.scrollTo(0, 0);
+  syncHeroVideo(current.id);
+  window.scrollTo({ top: 0, behavior: 'instant' });
   siteHeader.classList.remove('is-hidden');
   siteHeader.classList.toggle('is-scrolled', current.id !== 'home');
   lastHeaderScrollY = 0;
+  requestAnimationFrame(() => {
+    window.scrollTo({ top: 0, behavior: 'instant' });
+    syncPageAnimations(current.id);
+  });
 }
 
 function compileTransitionShader(gl, type, source) {
@@ -418,14 +453,18 @@ try {
 }
 route();
 
-const heroVideo = document.getElementById('heroVideo');
-const siteIntro = document.getElementById('siteIntro');
 if (siteIntro) {
   if (document.body.classList.contains('inner') || reducedMotion.matches) {
     siteIntro.hidden = true;
+    document.body.classList.remove('is-loading');
   } else {
+    document.body.classList.add('is-loading');
     siteIntro.addEventListener('animationend', event => {
-      if (event.target === siteIntro && event.animationName === 'intro-exit') siteIntro.hidden = true;
+      if (event.target === siteIntro && event.animationName === 'intro-exit') {
+        siteIntro.hidden = true;
+        document.body.classList.remove('is-loading');
+        if (window.ScrollTrigger) requestAnimationFrame(() => window.ScrollTrigger.refresh());
+      }
     });
   }
 }
@@ -433,18 +472,20 @@ heroVideo.addEventListener('error', () => {
   console.error('The homepage video failed to load; using the poster image instead.');
 });
 reducedMotion.addEventListener('change', () => {
-  if (!reducedMotion.matches) return;
-  const updatePage = pendingPageUpdate;
-  cancelPageTransition();
-  document.querySelectorAll('.water-ripple').forEach(ripple => {
-    const target = ripple.parentElement;
-    ripple.remove();
-    if (target && !target.querySelector('.water-ripple')) target.classList.remove('ripple-surface');
-  });
-  if (updatePage) updatePage();
-  heroVideo.pause();
+  if (reducedMotion.matches) {
+    if (siteIntro) siteIntro.hidden = true;
+    document.body.classList.remove('is-loading');
+    const updatePage = pendingPageUpdate;
+    cancelPageTransition();
+    document.querySelectorAll('.water-ripple').forEach(ripple => {
+      const target = ripple.parentElement;
+      ripple.remove();
+      if (target && !target.querySelector('.water-ripple')) target.classList.remove('ripple-surface');
+    });
+    if (updatePage) updatePage();
+  }
+  syncHeroVideo(activeViewId());
 });
-if (reducedMotion.matches) heroVideo.pause();
 
 /* ---------- Menu data: [name, price, note]. A price can be a number or [hot, iced] ---------- */
 const MENU = {
@@ -692,6 +733,7 @@ function openReservationInquiry(room, trigger) {
   inquiryRoom = room;
   inquiryTrigger = trigger;
   reservationForm.reset();
+  reservationCheckOut.setCustomValidity('');
   document.getElementById('reservationTitle').textContent = room.n;
   document.getElementById('reservationRate').textContent = `${peso(room.p)} per night · up to ${room.g} · breakfast included`;
   reservationCheckIn.value = stayCheckIn.value;
@@ -721,8 +763,10 @@ reservationCheckIn.addEventListener('change', () => {
   if (reservationCheckOut.value <= reservationCheckIn.value) reservationCheckOut.value = reservationCheckOut.min;
   updateInquiryEstimate();
 });
-reservationCheckOut.addEventListener('change', updateInquiryEstimate);
-reservationGuests.addEventListener('change', updateInquiryEstimate);
+reservationCheckOut.addEventListener('change', () => {
+  reservationCheckOut.setCustomValidity('');
+  updateInquiryEstimate();
+});
 document.getElementById('closeReservation').addEventListener('click', () => {
   reservationModal.hidden = true;
   if (inquiryTrigger) inquiryTrigger.focus();
@@ -749,36 +793,122 @@ reservationForm.addEventListener('submit', e => {
   location.href = `mailto:business@radventures.ph?subject=${encodeURIComponent('Reservation Inquiry - ' + inquiryRoom.n)}&body=${encodeURIComponent(text)}`;
   document.getElementById('roomInquirySent').hidden = false;
 });
-reservationCheckOut.addEventListener('change', () => reservationCheckOut.setCustomValidity(''));
-
-function buildCarousel(el, names, alt) {
-  const track = document.createElement('div');
-  track.className = 'carousel-track';
+function buildGallery(el, names, alt) {
   names.forEach((name, i) => {
     const figure = document.createElement('figure');
-    figure.className = 'ph';
+    figure.className = 'gallery-item';
+    figure.setAttribute('role', 'listitem');
     const img = document.createElement('img');
     img.src = src(name);
     img.alt = `${alt} ${i + 1}`;
-    img.loading = 'lazy';
-    figure.append(img);
-    track.append(figure);
+    img.loading = i < 4 ? 'eager' : 'lazy';
+    img.decoding = 'async';
+    const caption = document.createElement('figcaption');
+    caption.textContent = `${String(i + 1).padStart(2, '0')} / ${String(names.length).padStart(2, '0')}`;
+    figure.append(img, caption);
+    el.append(figure);
   });
-  const controls = document.createElement('div');
-  controls.className = 'carousel-controls';
-  [['Previous photos', -1, '←'], ['Next photos', 1, '→']].forEach(([label, direction, text]) => {
-    const button = document.createElement('button');
-    button.type = 'button';
-    button.setAttribute('aria-label', label);
-    button.textContent = text;
-    button.addEventListener('click', () => track.scrollBy({ left: direction * track.clientWidth * 0.8, behavior: 'smooth' }));
-    controls.append(button);
-  });
-  el.append(track, controls);
 }
-const homeGallery = document.getElementById('homeGallery');
-if (homeGallery) buildCarousel(homeGallery, ['gallery-02', 'gallery-04', 'gallery-06', 'gallery-08', 'gallery-20'], 'The Coast by RAD');
-buildCarousel(document.getElementById('gallery'), Array.from({ length: 20 }, (_, i) => 'gallery-' + String(i + 1).padStart(2, '0')), 'The Coast by RAD photo');
+buildGallery(document.getElementById('gallery'), Array.from({ length: 20 }, (_, i) => 'gallery-' + String(i + 1).padStart(2, '0')), 'The Coast by RAD photo');
+
+function createPinnedGalleryScrollAnimations(gsap, section, viewport, track, progress, animateImages) {
+  if (!section || !viewport || !track) return null;
+
+  const cards = [...track.querySelectorAll('.gallery-item, .experience-card')];
+  if (!cards.length) return null;
+  const travelDistance = () => Math.max(0, track.scrollWidth - viewport.clientWidth);
+  viewport.classList.add('is-pinned');
+
+  return gsap.context(() => {
+    const timeline = gsap.timeline({
+      scrollTrigger: {
+        trigger: section,
+        pin: section,
+        start: 'top top',
+        end: () => `+=${travelDistance()}`,
+        scrub: .75,
+        anticipatePin: 1,
+        invalidateOnRefresh: true,
+        onUpdate: self => {
+          if (progress) progress.style.transform = `scaleX(${self.progress})`;
+        }
+      }
+    });
+
+    timeline.to(track, { x: () => -travelDistance(), duration: 1, ease: 'none' }, 0);
+    cards.forEach((card, index) => {
+      const start = index / cards.length * .82;
+      const finalRotation = ((index % 3) - 1) * 1.25;
+      const image = card.querySelector('img');
+
+      timeline.fromTo(card, {
+        clipPath: 'inset(12% 10% round 14px)',
+        y: index % 2 === 0 ? 34 : -28,
+        rotation: finalRotation + (index % 2 === 0 ? -1.8 : 1.8),
+        scale: .93
+      }, {
+        clipPath: 'inset(0% 0% round 4px)',
+        y: index % 2 === 0 ? 8 : -8,
+        rotation: finalRotation,
+        scale: 1,
+        duration: .16,
+        ease: 'power2.out'
+      }, start);
+
+      if (animateImages && image) {
+        timeline.fromTo(image, { scale: 1.14 }, {
+          scale: 1,
+          duration: .22,
+          ease: 'none'
+        }, start);
+      }
+    });
+  }, section);
+}
+
+function createHomeScrollAnimations(gsap) {
+  return createPinnedGalleryScrollAnimations(
+    gsap,
+    document.getElementById('coastExperiences'),
+    document.getElementById('homeGalleryViewport'),
+    document.getElementById('homeGalleryTrack'),
+    document.getElementById('homeGalleryProgress'),
+    false
+  );
+}
+
+function createAboutGalleryScrollAnimations(gsap) {
+  return createPinnedGalleryScrollAnimations(
+    gsap,
+    document.getElementById('aboutGallery'),
+    document.getElementById('galleryViewport'),
+    document.getElementById('gallery'),
+    document.getElementById('galleryProgress'),
+    true
+  );
+}
+
+function syncPageAnimations(viewId) {
+  if (viewId !== activeViewId()) return;
+
+  revertPageGalleryContexts();
+
+  const homeGalleryViewport = document.getElementById('homeGalleryViewport');
+  if (homeGalleryViewport) homeGalleryViewport.classList.remove('is-pinned');
+  const homeGalleryProgress = document.getElementById('homeGalleryProgress');
+  if (homeGalleryProgress) homeGalleryProgress.style.transform = 'scaleX(0)';
+  const galleryViewport = document.getElementById('galleryViewport');
+  if (galleryViewport) galleryViewport.classList.remove('is-pinned');
+  const galleryProgress = document.getElementById('galleryProgress');
+  if (galleryProgress) galleryProgress.style.transform = 'scaleX(0)';
+
+  if (reducedMotion.matches || !window.gsap || !window.ScrollTrigger) return;
+
+  window.gsap.registerPlugin(window.ScrollTrigger);
+  if (viewId === 'home') homeGalleryContext = createHomeScrollAnimations(window.gsap);
+  if (viewId === 'about') aboutGalleryContext = createAboutGalleryScrollAnimations(window.gsap);
+  window.ScrollTrigger.refresh();
+}
 
 /* ---------- Event reservation: opens the visitor's email app with the details filled in ---------- */
 document.getElementById('reserve').addEventListener('submit', e => {
@@ -828,8 +958,9 @@ document.body.append(lb);
 lb.onclick = () => lb.hidden = true;
 addEventListener('keydown', e => { if (e.key === 'Escape') lb.hidden = true; });
 document.addEventListener('click', e => {
-  const i = e.target.closest('.mosaic img, .carousel img, .rgal img');
-  if (i) { lb.innerHTML = `<img src="${i.src}" alt="">`; lb.hidden = false; }
+  if (!(e.target instanceof Element)) return;
+  const i = e.target.closest('.mosaic img, .gallery img, .rgal img');
+  if (i) { lb.innerHTML = `<img src="${i.src}" alt="${i.alt}">`; lb.hidden = false; }
 });
 
 /* ---------- Tap a dish to show or hide its photo ---------- */
@@ -915,76 +1046,72 @@ addEventListener('keydown', e => {
 });
 
 const revealGroups = [
-  ['.banner h2,.page>.wrap>.lead,.page>.wrap>h3', 'text'],
+  ['.banner h2,.page>.wrap>.lead,.page>.wrap>h3,.gallery-heading', 'text'],
   ['.featured-card,.room,.contact-grid>div,.discover-card', 'card'],
-  ['.mosaic figure,.carousel-track>.ph', 'image'],
+  ['.mosaic figure', 'image'],
   ['#faq .wrap>details,.table-inquiry', 'panel']
 ];
 
-if ('IntersectionObserver' in window && !reducedMotion.matches) {
-  const revealObserver = new IntersectionObserver(entries => {
+const revealObserver = 'IntersectionObserver' in window && !reducedMotion.matches
+  ? new IntersectionObserver(entries => {
     entries.forEach(entry => {
       if (!entry.isIntersecting) return;
       entry.target.classList.add('is-revealed');
       revealObserver.unobserve(entry.target);
     });
-  }, { threshold: .12, rootMargin: '0px 0px -5% 0px' });
+  }, { threshold: .12, rootMargin: '0px 0px -5% 0px' })
+  : null;
 
-  revealGroups.forEach(([selector, style]) => {
-    document.querySelectorAll(selector).forEach((element, index) => {
-      element.classList.add('ocean-reveal', `ocean-reveal--${style}`);
-      element.style.setProperty('--reveal-delay', `${Math.min(index, 4) * 65}ms`);
-      revealObserver.observe(element);
-    });
+revealGroups.forEach(([selector, style]) => {
+  document.querySelectorAll(selector).forEach((element, index) => {
+    element.classList.add('ocean-reveal', `ocean-reveal--${style}`);
+    element.style.setProperty('--reveal-delay', `${Math.min(index, 4) * 65}ms`);
+    if (revealObserver) revealObserver.observe(element);
+    else element.classList.add('is-revealed');
   });
+});
 
-  const coastExperiences = document.querySelector('.coast-experiences');
-  if (coastExperiences) {
-    const cards = [...coastExperiences.querySelectorAll('.experience-card')];
-    const clamp01 = v => Math.min(1, Math.max(0, v));
-    const updateCoastScroll = () => {
-      const total = Math.max(1, coastExperiences.offsetHeight - window.innerHeight);
-      const progress = clamp01(-coastExperiences.getBoundingClientRect().top / total);
-      coastExperiences.style.setProperty('--scroll-progress', progress.toFixed(4));
-      // Subtle cinematic zoom on the large scenic background while cards animate in
-      const bgScale = 1.04 + progress * 0.14;
-      coastExperiences.style.setProperty('--bg-scale', bgScale.toFixed(4));
-      coastExperiences.style.setProperty('--bg-opacity', '1');
-      const introOpacity = 1 - clamp01((progress - 0.18) / 0.28) * 0.15;
-      coastExperiences.style.setProperty('--intro-opacity', introOpacity.toFixed(3));
-      cards.forEach((card, i) => {
-        const start = 0.04 + i * 0.1;
-        const end = start + 0.26;
-        const reveal = clamp01((progress - start) / (end - start));
-        card.style.setProperty('--reveal', reveal.toFixed(4));
-      });
-    };
-    let coastTicking = false;
-    const onCoastScroll = () => {
-      if (coastTicking) return;
-      coastTicking = true;
-      requestAnimationFrame(() => {
-        updateCoastScroll();
-        coastTicking = false;
-      });
-    };
-    updateCoastScroll();
-    addEventListener('scroll', onCoastScroll, { passive: true });
-    addEventListener('resize', updateCoastScroll);
-  }
-} else {
-  const coastExperiences = document.querySelector('.coast-experiences');
-  if (coastExperiences) {
-    coastExperiences.style.setProperty('--bg-scale', '1.08');
-    coastExperiences.style.setProperty('--bg-opacity', '1');
-    coastExperiences.style.setProperty('--intro-opacity', '1');
-    coastExperiences.querySelectorAll('.experience-card').forEach(card => card.style.setProperty('--reveal', '1'));
-  }
+const parallaxImages = [...document.querySelectorAll('[data-parallax]')];
+let parallaxFrame = 0;
+function updateParallax() {
+  parallaxFrame = 0;
+  const viewportCenter = window.innerHeight / 2;
+  parallaxImages.forEach(image => {
+    if (reducedMotion.matches) {
+      image.style.setProperty('--parallax-y', '0px');
+      return;
+    }
+    const bounds = image.getBoundingClientRect();
+    if (bounds.bottom < 0 || bounds.top > window.innerHeight) return;
+    const distance = (bounds.top + bounds.height / 2 - viewportCenter) / Math.max(viewportCenter, 1);
+    const offset = Math.max(-12, Math.min(12, -distance * 9));
+    image.style.setProperty('--parallax-y', `${offset.toFixed(2)}px`);
+  });
 }
+function scheduleParallaxUpdate() {
+  if (parallaxFrame || reducedMotion.matches) return;
+  parallaxFrame = requestAnimationFrame(updateParallax);
+}
+if (parallaxImages.length) {
+  updateParallax();
+  reducedMotion.addEventListener('change', scheduleParallaxUpdate);
+}
+function handlePageScroll() {
+  updateHeaderOnScroll();
+  updateScrollButtons();
+  if (parallaxImages.length) scheduleParallaxUpdate();
+}
+function handlePageResize() {
+  updateScrollButtons();
+  if (parallaxImages.length) scheduleParallaxUpdate();
+}
+addEventListener('scroll', handlePageScroll, { passive: true });
+addEventListener('resize', handlePageResize);
+reducedMotion.addEventListener('change', () => syncPageAnimations(activeViewId()));
 
 document.addEventListener('click', event => {
   if (reducedMotion.matches || !(event.target instanceof Element)) return;
-  const target = event.target.closest('.btn,.nav-book,.site-nav>a:not(.nav-book),.search-toggle,.menu-toggle,.carousel-controls button,.tile,.discover-card,.carousel-track>.ph,.mosaic figure,footer .social a');
+  const target = event.target.closest('.btn,.nav-book,.site-nav>a:not(.nav-book),.search-toggle,.menu-toggle,.tile,.experience-card,.discover-card,.gallery-item,.mosaic figure,footer .social a');
   if (!target) return;
 
   const bounds = target.getBoundingClientRect();
