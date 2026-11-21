@@ -776,7 +776,8 @@ function buildCarousel(el, names, alt) {
   });
   el.append(track, controls);
 }
-buildCarousel(document.getElementById('homeGallery'), ['gallery-02', 'gallery-04', 'gallery-06', 'gallery-08', 'gallery-20'], 'The Coast by RAD');
+const homeGallery = document.getElementById('homeGallery');
+if (homeGallery) buildCarousel(homeGallery, ['gallery-02', 'gallery-04', 'gallery-06', 'gallery-08', 'gallery-20'], 'The Coast by RAD');
 buildCarousel(document.getElementById('gallery'), Array.from({ length: 20 }, (_, i) => 'gallery-' + String(i + 1).padStart(2, '0')), 'The Coast by RAD photo');
 
 /* ---------- Event reservation: opens the visitor's email app with the details filled in ---------- */
@@ -936,6 +937,49 @@ if ('IntersectionObserver' in window && !reducedMotion.matches) {
       revealObserver.observe(element);
     });
   });
+
+  const coastExperiences = document.querySelector('.coast-experiences');
+  if (coastExperiences) {
+    const cards = [...coastExperiences.querySelectorAll('.experience-card')];
+    const clamp01 = v => Math.min(1, Math.max(0, v));
+    const updateCoastScroll = () => {
+      const total = Math.max(1, coastExperiences.offsetHeight - window.innerHeight);
+      const progress = clamp01(-coastExperiences.getBoundingClientRect().top / total);
+      coastExperiences.style.setProperty('--scroll-progress', progress.toFixed(4));
+      // Subtle cinematic zoom on the large scenic background while cards animate in
+      const bgScale = 1.04 + progress * 0.14;
+      coastExperiences.style.setProperty('--bg-scale', bgScale.toFixed(4));
+      coastExperiences.style.setProperty('--bg-opacity', '1');
+      const introOpacity = 1 - clamp01((progress - 0.18) / 0.28) * 0.15;
+      coastExperiences.style.setProperty('--intro-opacity', introOpacity.toFixed(3));
+      cards.forEach((card, i) => {
+        const start = 0.04 + i * 0.1;
+        const end = start + 0.26;
+        const reveal = clamp01((progress - start) / (end - start));
+        card.style.setProperty('--reveal', reveal.toFixed(4));
+      });
+    };
+    let coastTicking = false;
+    const onCoastScroll = () => {
+      if (coastTicking) return;
+      coastTicking = true;
+      requestAnimationFrame(() => {
+        updateCoastScroll();
+        coastTicking = false;
+      });
+    };
+    updateCoastScroll();
+    addEventListener('scroll', onCoastScroll, { passive: true });
+    addEventListener('resize', updateCoastScroll);
+  }
+} else {
+  const coastExperiences = document.querySelector('.coast-experiences');
+  if (coastExperiences) {
+    coastExperiences.style.setProperty('--bg-scale', '1.08');
+    coastExperiences.style.setProperty('--bg-opacity', '1');
+    coastExperiences.style.setProperty('--intro-opacity', '1');
+    coastExperiences.querySelectorAll('.experience-card').forEach(card => card.style.setProperty('--reveal', '1'));
+  }
 }
 
 document.addEventListener('click', event => {

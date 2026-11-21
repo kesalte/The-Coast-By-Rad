@@ -444,6 +444,45 @@ body.inner .site-nav .nav-book{border-color:var(--navy);color:var(--navy)}
   #faq .wrap>details{padding:1rem}
 }
 
+/* Scroll-driven coastal experiences (Sunmai-inspired: big background zooms, polaroid cards reveal on scroll) */
+.coast-experiences{position:relative;height:340vh;min-height:340vh;color:#fff;background:#0f2e3d;--scroll-progress:0}
+.coast-experiences-sticky{position:sticky;top:0;height:100vh;height:100svh;overflow:hidden;display:flex;align-items:center;justify-content:center;padding:clamp(4.5rem,9vh,6rem) clamp(1rem,4vw,3rem) clamp(7rem,15vh,9.5rem)}
+.coast-experiences-bg{position:absolute;inset:-6%;z-index:0}
+.coast-experiences-bg::after{content:"";position:absolute;inset:0;z-index:1;background:linear-gradient(180deg,rgba(10,34,46,.22),rgba(16,48,64,.06) 34%,rgba(16,48,64,.14) 62%,rgba(241,238,230,.08));pointer-events:none}
+.coast-experiences-bg img{width:100%;height:100%;object-fit:cover;transform:scale(var(--bg-scale,1.04));opacity:var(--bg-opacity,1);filter:saturate(1.05) contrast(1.02);will-change:transform;transform-origin:center center}
+.coast-experiences-stage{position:relative;z-index:2;width:min(100%,82rem);margin:0 auto}
+.coast-experiences-intro{text-align:center;margin:0 auto 2.2rem;max-width:52rem;opacity:var(--intro-opacity,1);transform:translateY(calc((1 - var(--intro-opacity,1)) * 18px));will-change:opacity,transform}
+.coast-experiences-intro .section-kicker{background:rgba(247,242,232,.18);color:#fff;border:1px solid rgba(255,255,255,.28)}
+.coast-experiences-intro h2{color:#fff;text-shadow:0 4px 28px rgba(0,0,0,.22)}
+.coast-experiences-intro .lead{color:rgba(255,255,255,.92);margin:0 auto}
+.coast-experiences-wave{position:absolute;right:0;bottom:-1px;left:0;z-index:1;width:100%;height:clamp(7rem,17vw,12rem);pointer-events:none}
+.coast-experiences-cards{display:flex;align-items:flex-end;justify-content:center;gap:clamp(.8rem,1.8vw,1.6rem);list-style:none;padding:0;margin:0}
+.experience-card{position:relative;flex:1 1 0;max-width:18.5rem;min-width:0;padding:1.4rem 1rem 1.8rem;border-radius:1.6rem 1.6rem 2.8rem 2.8rem;background:rgba(250,248,242,.985);color:var(--ink);text-align:center;box-shadow:0 24px 48px rgba(10,35,48,.22);opacity:var(--reveal,0);transform:translateY(calc(var(--card-lift,0px) + (1 - var(--reveal,0)) * 140px)) scale(calc(.82 + var(--reveal,0) * .18));will-change:opacity,transform}
+.experience-card:nth-child(1){--card-lift:1.5rem}
+.experience-card:nth-child(2){--card-lift:-.1rem}
+.experience-card:nth-child(3){--card-lift:-1.7rem}
+.experience-card:nth-child(4){--card-lift:-.1rem}
+.experience-card:nth-child(5){--card-lift:1.5rem}
+.experience-badge{position:absolute;top:.6rem;left:50%;transform:translateX(-50%);display:grid;place-items:center;width:1.85rem;height:1.85rem;border:1px solid rgba(200,117,91,.45);border-radius:50%;background:#fff;color:var(--coral);font:600 .62rem/1 var(--nav-font);letter-spacing:.04em}
+.experience-photo{display:block;width:clamp(9rem,15vw,12.5rem);height:clamp(9rem,15vw,12.5rem);margin:1.35rem auto 1rem;border-radius:50%;overflow:hidden;box-shadow:0 0 0 8px #fff,0 14px 30px rgba(24,59,85,.16)}
+.experience-photo img{width:100%;height:100%;object-fit:cover;transform:scale(calc(1.1 - var(--reveal,0) * .1))}
+.experience-card h3{font:600 clamp(1rem,1.35vw,1.12rem)/1.35 var(--sans);color:var(--coral);letter-spacing:0;text-transform:none;margin:0}
+
+@media (max-width:900px){
+  .coast-experiences{height:300vh;min-height:300vh}
+  .coast-experiences-sticky{padding:4.5rem .9rem 6.5rem}
+  .coast-experiences-cards{flex-wrap:wrap;align-items:stretch;gap:.85rem}
+  .experience-card{flex:1 1 calc(50% - .85rem);max-width:17rem;--card-lift:0px!important}
+  .experience-card:nth-child(5){flex-basis:100%;max-width:17rem}
+}
+@media (max-width:520px){
+  .coast-experiences{height:320vh;min-height:320vh}
+  .coast-experiences-cards{display:grid;grid-template-columns:1fr 1fr;gap:.7rem}
+  .experience-card{max-width:none;padding:1rem .65rem 1.15rem}
+  .experience-card:nth-child(5){grid-column:1/-1;justify-self:center;width:min(100%,17rem)}
+  .experience-photo{width:5.6rem;height:5.6rem}
+}
+
 /* Transparent surface for the procedural WebGL ocean transition */
 .ocean-transition{position:fixed;inset:0;z-index:1000;pointer-events:none}
 .ocean-transition[hidden]{display:none}
@@ -483,4 +522,10 @@ body.inner .site-nav .nav-book{border-color:var(--navy);color:var(--navy)}
   .ocean-reveal,.ocean-reveal--image{opacity:1!important;clip-path:none!important;transform:none!important;transition:none!important}
   .ocean-reveal--image img{transform:none!important;transition:none!important}
   .welcome::before,.featured-menu::before{animation:none!important}
+  .coast-experiences{height:auto;min-height:100svh}
+  .coast-experiences-sticky{position:relative;height:auto;min-height:100svh}
+  .coast-experiences-bg img{transform:scale(1.08)!important;opacity:1!important}
+  .coast-experiences-intro{opacity:1!important;transform:none!important}
+  .experience-card{opacity:1!important;transform:translateY(var(--card-lift,0px)) scale(1)!important}
+  .experience-photo img{transform:scale(1)!important}
 }
