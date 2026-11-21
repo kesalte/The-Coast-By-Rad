@@ -134,6 +134,7 @@ function route() {
   requestAnimationFrame(() => {
     window.scrollTo({ top: 0, behavior: 'instant' });
     syncPageAnimations(current.id);
+    refreshInitialLayout();
   });
 }
 
@@ -464,13 +465,26 @@ if (siteIntro) {
         siteIntro.hidden = true;
         document.body.classList.remove('is-loading');
         if (window.ScrollTrigger) requestAnimationFrame(() => window.ScrollTrigger.refresh());
+        refreshInitialLayout();
       }
     });
+    setTimeout(() => {
+      if (siteIntro.hidden) return;
+      siteIntro.hidden = true;
+      document.body.classList.remove('is-loading');
+      refreshInitialLayout();
+    }, 4600);
   }
 }
 heroVideo.addEventListener('error', () => {
   console.error('The homepage video failed to load; using the poster image instead.');
 });
+addEventListener('load', refreshInitialLayout);
+addEventListener('pageshow', refreshInitialLayout);
+addEventListener('resize', () => refreshInitialLayout(), { passive: true });
+if (document.fonts && document.fonts.ready) {
+  document.fonts.ready.then(refreshInitialLayout);
+}
 reducedMotion.addEventListener('change', () => {
   if (reducedMotion.matches) {
     if (siteIntro) siteIntro.hidden = true;
@@ -907,7 +921,17 @@ function syncPageAnimations(viewId) {
   window.gsap.registerPlugin(window.ScrollTrigger);
   if (viewId === 'home') homeGalleryContext = createHomeScrollAnimations(window.gsap);
   if (viewId === 'about') aboutGalleryContext = createAboutGalleryScrollAnimations(window.gsap);
-  window.ScrollTrigger.refresh();
+  requestAnimationFrame(() => window.ScrollTrigger.refresh());
+}
+
+let layoutRefreshFrame = 0;
+function refreshInitialLayout() {
+  if (layoutRefreshFrame) cancelAnimationFrame(layoutRefreshFrame);
+  layoutRefreshFrame = requestAnimationFrame(() => {
+    layoutRefreshFrame = 0;
+    syncPageAnimations(activeViewId());
+    if (window.ScrollTrigger) window.ScrollTrigger.refresh();
+  });
 }
 
 /* ---------- Event reservation: opens the visitor's email app with the details filled in ---------- */

@@ -21,8 +21,8 @@
   --radius:10px;
 }
 *{box-sizing:border-box;margin:0}
-html{scroll-behavior:smooth;scroll-padding-top:6rem}
-body{min-width:320px;font:400 1rem/1.7 var(--sans);color:var(--ink);background:var(--sand);-webkit-font-smoothing:antialiased}
+html{width:100%;overflow-x:hidden;scroll-behavior:smooth;scroll-padding-top:6rem}
+body{width:100%;min-width:320px;overflow-x:hidden;font:400 1rem/1.7 var(--sans);color:var(--ink);background:var(--sand);-webkit-font-smoothing:antialiased}
 body.is-loading{overflow:hidden}
 body.inner main{padding-top:6rem;background:var(--sand)}
 img{display:block;max-width:100%}
