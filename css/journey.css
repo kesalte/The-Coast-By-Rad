@@ -1,0 +1,204 @@
+/* ==========================================================================
+   THE COAST BY RAD — 3D journey (starts after the original homepage hero)
+   Default styles = accessible static layout (no JS / no WebGL / reduced motion).
+   [data-mode="immersive"] upgrades it to the sticky, scroll-driven Three.js stage.
+   Palette: deep navy #123744 · sea teal #39777A · sand #F1EADB · coral #BD7657
+            ink #24373B · gray-teal #627477 · soft gold #E6C997
+   Type:    Cormorant Garamond (editorial) · Jost (labels/body)
+   ========================================================================== */
+
+/* position:sticky is broken by overflow-x:hidden on html/body; clip is visually identical */
+html, body { overflow-x: clip; }
+
+.journey {
+  --j-navy: #123744; --j-teal: #39777a; --j-sand: #f1eadb; --j-coral: #bd7657;
+  --j-ink: #24373b; --j-gray: #627477; --j-gold: #e6c997; --j-deep: #0a1d25;
+  --j-serif: "Cormorant Garamond", "Cormorant", Georgia, "Times New Roman", serif;
+  --j-sans: "Jost", "DM Sans", "Avenir Next", system-ui, sans-serif;
+  position: relative;
+  background: var(--j-deep);
+  color: var(--j-sand);
+}
+
+/* ---------- Static layout (default) ---------- */
+.journey-stage {
+  position: relative;
+  padding: clamp(4rem, 9vw, 8rem) clamp(1.25rem, 6vw, 6rem);
+  background: linear-gradient(180deg, #0c2631 0%, #123744 55%, #0e2a35 100%);
+}
+.journey-canvas, .journey-vignette, .journey-rail, .journey-progress,
+.journey-skip, .journey-loading { display: none; }
+
+.chapter {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr);
+  gap: clamp(1.5rem, 5vw, 5rem);
+  align-items: center;
+  max-width: 78rem;
+  margin: 0 auto clamp(4rem, 9vw, 8rem);
+}
+.chapter:last-of-type { margin-bottom: 0; }
+.chapter-figs { display: grid; gap: .9rem; grid-template-columns: 1fr 1fr; }
+.chapter-figs figure { margin: 0; overflow: hidden; border-radius: 3px; box-shadow: 0 24px 50px rgba(0, 0, 0, .32); }
+.chapter-figs figure:first-child { grid-column: 1 / -1; }
+.chapter-figs img { display: block; width: 100%; height: 100%; aspect-ratio: 4 / 3; object-fit: cover; }
+.chapter--finale { grid-template-columns: 1fr; text-align: center; }
+.chapter--finale .chapter-figs { order: -1; }
+
+/* ---------- Typography ---------- */
+.chapter-no {
+  display: flex; align-items: baseline; gap: .9rem; margin: 0 0 1.1rem;
+  font: 500 .78rem/1 var(--j-sans); letter-spacing: .32em; text-transform: uppercase; color: var(--j-gold);
+}
+.chapter-no span {
+  font: 400 italic 1.7rem/1 var(--j-serif); letter-spacing: .02em; text-transform: none; color: var(--j-sand); opacity: .9;
+}
+.chapter h2 {
+  margin: 0 0 1.2rem;
+  font: 400 clamp(2.5rem, 5.4vw, 5.2rem)/1 var(--j-serif);
+  letter-spacing: -.012em; color: var(--j-sand); text-wrap: balance;
+}
+.chapter-lead {
+  max-width: 31rem; margin: 0 0 1.6rem;
+  font: 300 clamp(1rem, 1.25vw, 1.12rem)/1.75 var(--j-sans); color: rgba(241, 234, 219, .9);
+}
+.chapter .text-link {
+  position: relative; display: inline-flex; align-items: center; gap: .6rem; min-height: 2.75rem;
+  font: 500 .78rem/1 var(--j-sans); letter-spacing: .22em; text-transform: uppercase;
+  color: var(--j-gold); text-decoration: none; pointer-events: auto;
+}
+.chapter .text-link::after {
+  content: ""; position: absolute; left: 0; right: 0; bottom: .55rem; height: 1px;
+  background: currentColor; transform-origin: left; transform: scaleX(.28); transition: transform .45s cubic-bezier(.2, .7, .2, 1);
+}
+.chapter .text-link:hover::after, .chapter .text-link:focus-visible::after { transform: scaleX(1); }
+.chapter .text-link span { transition: transform .35s; }
+.chapter .text-link:hover span { transform: translateX(.3rem); }
+.chapter a:focus-visible, .journey-skip:focus-visible { outline: 2px solid var(--j-gold); outline-offset: 4px; border-radius: 2px; }
+
+.finale-title { font-style: italic; font-weight: 300; font-size: clamp(2.4rem, 6.4vw, 6.4rem); line-height: 1.04; }
+.finale-title span { display: block; }
+.finale-actions { justify-content: center; margin-top: 2rem; display: flex; flex-wrap: wrap; gap: .8rem; }
+.chapter--finale .btn.ghost { border-color: rgba(241, 234, 219, .7); background: rgba(10, 29, 37, .35); color: var(--j-sand); }
+.chapter--finale .btn.ghost:hover { background: var(--j-sand); color: var(--j-navy); }
+.chapter .btn { pointer-events: auto; }
+
+@media (max-width: 800px) {
+  .chapter { grid-template-columns: 1fr; }
+  .chapter--finale .chapter-figs { grid-template-columns: 1fr; }
+}
+
+/* ==========================================================================
+   IMMERSIVE MODE — sticky stage, scrubbed by GSAP ScrollTrigger
+   ========================================================================== */
+.journey[data-mode="immersive"] { height: var(--journey-height, 1000vh); }
+.journey[data-mode="immersive"] .journey-stage {
+  position: sticky; top: 0; height: 100vh; height: 100svh; padding: 0; overflow: hidden; background: var(--j-deep);
+}
+.journey[data-mode="immersive"] .journey-canvas {
+  display: block; position: absolute; inset: 0; width: 100%; height: 100%; touch-action: pan-y;
+}
+.journey[data-mode="immersive"] .journey-vignette {
+  display: block; position: absolute; inset: 0; pointer-events: none;
+  background:
+    radial-gradient(120% 90% at 50% 46%, transparent 52%, rgba(4, 14, 19, .5) 100%),
+    linear-gradient(180deg, rgba(4, 14, 19, .5), transparent 16%, transparent 68%, rgba(4, 14, 19, .58));
+}
+.journey[data-mode="immersive"] .chapter {
+  position: absolute; inset: 0; display: block; max-width: none; margin: 0; padding: 0;
+  pointer-events: none; opacity: 0; visibility: hidden;
+}
+.journey[data-mode="immersive"] .chapter-figs { display: none; }
+.journey[data-mode="immersive"] .chapter-copy {
+  position: absolute; left: clamp(1.4rem, 6vw, 6.5rem); bottom: clamp(4.2rem, 13vh, 8.5rem);
+  width: min(36rem, calc(100% - 2.8rem)); isolation: isolate;
+}
+/* soft dark pool behind copy keeps 4.5:1 contrast over any photo */
+.journey[data-mode="immersive"] .chapter-copy::before {
+  content: ""; position: absolute; z-index: -1; inset: -4rem -5rem -3rem -4rem;
+  background: radial-gradient(closest-side, rgba(6, 20, 27, .72), rgba(6, 20, 27, .46) 55%, transparent);
+  filter: blur(6px);
+}
+.journey[data-mode="immersive"] .chapter h2 { text-shadow: 0 2px 28px rgba(0, 0, 0, .45); }
+.journey[data-mode="immersive"] .chapter-lead { text-shadow: 0 1px 14px rgba(0, 0, 0, .55); }
+
+.journey[data-mode="immersive"] .chapter--finale .chapter-copy {
+  left: 50%; bottom: clamp(3.4rem, 11vh, 7rem); width: min(64rem, calc(100% - 2.8rem)); transform: translateX(-50%); text-align: center;
+}
+.journey[data-mode="immersive"] .chapter--finale .chapter-copy::before { inset: -4rem -8rem -3rem; }
+.journey[data-mode="immersive"] .chapter--finale .chapter-no { justify-content: center; margin-bottom: .8rem; }
+.journey[data-mode="immersive"] .chapter--finale .finale-title { font-size: clamp(2rem, 4.4vw, 4.4rem); margin-bottom: 0; }
+.journey[data-mode="immersive"] .chapter--finale .finale-title span { display: inline; }
+.journey[data-mode="immersive"] .chapter--finale .finale-actions { margin-top: 1.6rem; }
+
+.journey[data-mode="immersive"] .journey-rail {
+  display: flex; flex-direction: column; gap: .95rem; position: absolute; z-index: 3;
+  right: clamp(1.1rem, 2.6vw, 2.4rem); top: 50%; transform: translateY(-50%);
+  margin: 0; padding: 0; list-style: none; text-align: right;
+  font: 500 .75rem/1 var(--j-sans); letter-spacing: .24em; text-transform: uppercase;
+}
+.journey-rail li { position: relative; padding-right: 1.5rem; color: rgba(241, 234, 219, .55); transition: color .5s; }
+.journey-rail li::after {
+  content: ""; position: absolute; right: 0; top: 50%; width: .5rem; height: 1px;
+  background: currentColor; transition: width .5s cubic-bezier(.2, .7, .2, 1);
+}
+.journey-rail li.is-active { color: var(--j-gold); }
+.journey-rail li.is-active::after { width: 1.1rem; }
+
+.journey[data-mode="immersive"] .journey-progress {
+  display: block; position: absolute; z-index: 3; left: 0; right: 0; bottom: 0; height: 2px; background: rgba(241, 234, 219, .14);
+}
+.journey-progress span { display: block; height: 100%; background: var(--j-gold); transform: scaleX(0); transform-origin: left; }
+
+.journey[data-mode="immersive"] .journey-skip {
+  display: inline-flex; align-items: center; position: absolute; z-index: 4; right: 5.6rem;
+  bottom: 1.1rem; min-height: 2.75rem; padding: 0 .2rem; border: 0; background: none; cursor: pointer;
+  font: 500 .75rem/1 var(--j-sans); letter-spacing: .22em; text-transform: uppercase; color: rgba(241, 234, 219, .78);
+  transition: color .3s;
+}
+.journey-skip:hover { color: var(--j-gold); }
+
+.journey[data-mode="immersive"] .journey-loading {
+  display: grid; place-items: center; position: absolute; inset: 0; z-index: 5; pointer-events: none;
+  background: var(--j-deep); color: var(--j-gold); opacity: 0; transition: opacity .8s ease;
+  font: 500 .78rem/1 var(--j-sans); letter-spacing: .32em; text-transform: uppercase;
+}
+.journey[data-mode="immersive"][data-ready="false"] .journey-loading { opacity: 1; }
+
+
+/* title-safe scrim: fades in with each chapter so copy stays readable over any photo */
+.journey[data-mode="immersive"] .chapter::before {
+  content: ""; position: absolute; inset: 0; pointer-events: none;
+  background:
+    linear-gradient(90deg, rgba(5, 17, 23, .86) 0%, rgba(5, 17, 23, .66) 26%, rgba(5, 17, 23, .22) 50%, transparent 64%),
+    linear-gradient(0deg, rgba(5, 17, 23, .55), transparent 40%);
+}
+.journey[data-mode="immersive"] .chapter--finale::before {
+  background: linear-gradient(0deg, rgba(5, 17, 23, .88) 0%, rgba(5, 17, 23, .6) 28%, rgba(5, 17, 23, .12) 50%, transparent 62%);
+}
+.journey[data-mode="immersive"] .journey-rail { text-shadow: 0 1px 10px rgba(0, 0, 0, .8); }
+@media (max-width: 800px) {
+  .journey[data-mode="immersive"] .chapter::before {
+    background: linear-gradient(0deg, rgba(5, 17, 23, .92) 0%, rgba(5, 17, 23, .72) 34%, rgba(5, 17, 23, .2) 58%, transparent 72%);
+  }
+}
+
+@media (max-width: 800px) {
+  .journey[data-mode="immersive"] .journey-rail { display: none; }
+  .journey[data-mode="immersive"] .chapter-copy { left: 1.4rem; bottom: 4.6rem; width: calc(100% - 6.2rem); }
+  .journey[data-mode="immersive"] .chapter-copy::before { inset: -3rem -1.4rem -2rem; }
+  .journey[data-mode="immersive"] .chapter h2 { font-size: clamp(2.1rem, 9.5vw, 3rem); margin-bottom: .8rem; }
+  .journey[data-mode="immersive"] .chapter-lead { font-size: .98rem; line-height: 1.6; margin-bottom: .9rem; }
+  .journey[data-mode="immersive"] .chapter--finale .finale-title { font-size: clamp(1.9rem, 8.4vw, 2.8rem); }
+  .journey[data-mode="immersive"] .chapter--finale .finale-title span { display: block; }
+  .journey[data-mode="immersive"] .chapter--finale .chapter-copy { left: 50%; bottom: 8.4rem; width: calc(100% - 2.8rem); }
+  .journey[data-mode="immersive"] .chapter--finale .finale-actions .btn { min-height: 2.7rem; padding: .6rem 1.1rem; font-size: .72rem; }
+  .journey[data-mode="immersive"] .journey-skip { bottom: .9rem; right: 4.8rem; }
+}
+@media (max-height: 560px) and (orientation: landscape) {
+  .journey[data-mode="immersive"] .chapter h2 { font-size: 2.2rem; }
+  .journey[data-mode="immersive"] .chapter-lead { display: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .chapter .text-link::after, .chapter .text-link span { transition: none; }
+}
