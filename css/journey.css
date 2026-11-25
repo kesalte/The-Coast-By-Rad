@@ -83,7 +83,7 @@ html, body { overflow-x: clip; }
 .chapter--finale .btn.ghost:hover { background: var(--j-sand); color: var(--j-navy); }
 .chapter .btn { pointer-events: auto; }
 
-@media (max-width: 800px) {
+@media (max-width: 800px), (max-aspect-ratio: 21/20) {
   .chapter { grid-template-columns: 1fr; }
   .chapter--finale .chapter-figs { grid-template-columns: 1fr; }
 }
@@ -91,7 +91,7 @@ html, body { overflow-x: clip; }
 /* ==========================================================================
    IMMERSIVE MODE — sticky stage, scrubbed by GSAP ScrollTrigger
    ========================================================================== */
-.journey[data-mode="immersive"] { height: var(--journey-height, 1000vh); }
+.journey[data-mode="immersive"] { height: var(--journey-height, 1500vh); }
 .journey[data-mode="immersive"] .journey-stage {
   position: sticky; top: 0; height: 100vh; height: 100svh; padding: 0; overflow: hidden; background: var(--j-deep);
 }
@@ -177,13 +177,13 @@ html, body { overflow-x: clip; }
   background: linear-gradient(0deg, rgba(5, 17, 23, .88) 0%, rgba(5, 17, 23, .6) 28%, rgba(5, 17, 23, .12) 50%, transparent 62%);
 }
 .journey[data-mode="immersive"] .journey-rail { text-shadow: 0 1px 10px rgba(0, 0, 0, .8); }
-@media (max-width: 800px) {
+@media (max-width: 800px), (max-aspect-ratio: 21/20) {
   .journey[data-mode="immersive"] .chapter::before {
     background: linear-gradient(0deg, rgba(5, 17, 23, .92) 0%, rgba(5, 17, 23, .72) 34%, rgba(5, 17, 23, .2) 58%, transparent 72%);
   }
 }
 
-@media (max-width: 800px) {
+@media (max-width: 800px), (max-aspect-ratio: 21/20) {
   .journey[data-mode="immersive"] .journey-rail { display: none; }
   .journey[data-mode="immersive"] .chapter-copy { left: 1.4rem; bottom: 4.6rem; width: calc(100% - 6.2rem); }
   .journey[data-mode="immersive"] .chapter-copy::before { inset: -3rem -1.4rem -2rem; }
@@ -201,4 +201,72 @@ html, body { overflow-x: clip; }
 }
 @media (prefers-reduced-motion: reduce) {
   .chapter .text-link::after, .chapter .text-link span { transition: none; }
+}
+
+
+/* ==========================================================================
+   v2 — dedicated text space, chapter accents, hero-card echo, portal hand-off
+   ========================================================================== */
+.journey { --accent: #e6c997; }
+.journey .chapter-no { color: var(--accent); }
+.journey .chapter .text-link { color: var(--accent); }
+.journey-rail li.is-active { color: var(--accent); }
+
+/* hero dissolve (the original hero fades into the journey's first colours as it scrolls away) */
+.home-dissolve { position: absolute; inset: 0; z-index: 1; opacity: 0; pointer-events: none;
+  background: linear-gradient(180deg, #0a2733, #08202a); }
+
+/* echo of the hero's Café / Stay / Events cards: same photo, same coloured bottom edge */
+.card-echo { display: inline-flex; align-items: flex-end; gap: .75rem; margin: 0 0 1.05rem; }
+.card-echo img { display: block; width: 3.5rem; height: 2.6rem; object-fit: cover; border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, .72); border-bottom: 4px solid var(--accent); box-shadow: 0 8px 20px rgba(0, 0, 0, .35); }
+.card-echo i { font: italic 400 1.2rem/1 var(--j-serif); color: var(--j-sand); padding-bottom: .15rem; }
+.card-echo--stay img   { border-bottom-color: #648d8b; }
+.card-echo--cafe img   { border-bottom-color: #b96b52; }
+.card-echo--events img { border-bottom-color: #c2a16a; }
+
+/* rail buttons (accessible, clickable) */
+.journey-rail li button { display: block; margin: -.7rem 0; padding: .7rem 0; border: 0; background: none; cursor: pointer;
+  color: inherit; font: inherit; letter-spacing: inherit; text-transform: inherit; text-align: right; pointer-events: auto; }
+.journey-rail li button:focus-visible { outline: 2px solid var(--j-gold); outline-offset: 4px; border-radius: 2px; }
+.journey-rail li:hover { color: var(--j-sand); }
+
+/* ---- desktop / landscape: text lives in its own column, the 3D world sits to its right ---- */
+@media (min-width: 801px) and (min-aspect-ratio: 21/20) {
+  .journey[data-mode="immersive"] .chapter-copy,
+  .journey[data-mode="immersive"] .chapter--finale .chapter-copy {
+    left: clamp(1.6rem, 5vw, 6rem); right: auto; bottom: auto; top: 50%;
+    width: min(31vw, 30rem); transform: translateY(-50%); text-align: left;
+  }
+  .journey[data-mode="immersive"] .chapter-copy::before,
+  .journey[data-mode="immersive"] .chapter--finale .chapter-copy::before {
+    inset: -3.5rem -3rem -3.5rem -4rem; background: radial-gradient(closest-side, rgba(6, 20, 27, .58), rgba(6, 20, 27, .3) 62%, transparent);
+  }
+  .journey[data-mode="immersive"] .chapter h2 { font-size: clamp(2.3rem, 3.9vw, 4.4rem); line-height: 1.02; }
+  .journey[data-mode="immersive"] .chapter--finale .finale-title { font-size: clamp(2.1rem, 3.7vw, 4rem); text-align: left; }
+  .journey[data-mode="immersive"] .chapter--finale .finale-title span { display: block; }
+  .journey[data-mode="immersive"] .chapter--finale .chapter-no { justify-content: flex-start; }
+  .journey[data-mode="immersive"] .chapter--finale .finale-actions { justify-content: flex-start; }
+  /* the scrim only needs to cover the text column now, never the photographs */
+  .journey[data-mode="immersive"] .chapter::before,
+  .journey[data-mode="immersive"] .chapter--finale::before {
+    background: linear-gradient(90deg, rgba(5, 17, 23, .72) 0%, rgba(5, 17, 23, .5) 24%, rgba(5, 17, 23, .12) 40%, transparent 48%),
+                linear-gradient(0deg, rgba(5, 17, 23, .4), transparent 28%);
+  }
+}
+@media (min-width: 801px) and (max-width: 1100px) and (min-aspect-ratio: 21/20) {
+  .journey[data-mode="immersive"] .chapter-copy { width: min(34vw, 26rem); }
+  .journey[data-mode="immersive"] .chapter h2 { font-size: clamp(2rem, 4.2vw, 3rem); }
+}
+@media (min-width: 801px) and (min-aspect-ratio: 21/20) {
+  /* compact horizontal chapter rail along the bottom, clear of the copy and the photographs */
+  .journey[data-mode="immersive"] .journey-rail { flex-direction: row; gap: 1.7rem; right: auto; top: auto; left: clamp(1.6rem, 5vw, 6rem);
+    bottom: clamp(1.5rem, 4.5vh, 2.8rem); transform: none; text-align: left; font-size: .66rem; letter-spacing: .2em; }
+  .journey[data-mode="immersive"] .journey-rail li { padding: 0 0 .6rem; text-align: left; }
+  .journey[data-mode="immersive"] .journey-rail li::after { right: auto; left: 0; top: auto; bottom: 0; width: .6rem; }
+  .journey[data-mode="immersive"] .journey-rail li.is-active::after { width: 100%; }
+  .journey-rail li button { text-align: left; margin: -.5rem 0; padding: .5rem 0; }
+  .journey[data-mode="immersive"] .chapter--finale .chapter-copy { width: min(36vw, 34rem); }
+  .journey[data-mode="immersive"] .chapter--finale .finale-title { font-size: clamp(1.9rem, 3.05vw, 3.3rem); }
+  .journey[data-mode="immersive"] .chapter--finale .finale-title span { white-space: nowrap; }
 }
